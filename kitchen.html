@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rakit Coffee - KDS</title>
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/kitchen.css">
+  <script type="module" src="./src/kitchen.js"></script>
+</head>
+<body class="kds-body">
+  
+  <header class="kds-header">
+    <div class="kds-brand">
+      <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent);">kitchen</span>
+      <h1>Kitchen Display System</h1>
+    </div>
+    <div class="kds-time" id="clock">00:00:00</div>
+  </header>
+
+  <main class="kds-board">
+    <!-- Kolom Diterima -->
+    <div class="kds-column">
+      <div class="kds-column-header">
+        <h2>Diterima</h2>
+        <span class="kds-badge" id="count-diterima">0</span>
+      </div>
+      <div class="kds-column-content" id="col-diterima">
+        <!-- Order cards here -->
+      </div>
+    </div>
+
+    <!-- Kolom Dimasak -->
+    <div class="kds-column">
+      <div class="kds-column-header" style="background-color: var(--color-accent); color: white;">
+        <h2>Sedang Dimasak</h2>
+        <span class="kds-badge" id="count-dimasak" style="background-color: white; color: var(--color-accent);">0</span>
+      </div>
+      <div class="kds-column-content" id="col-dimasak">
+        <!-- Order cards here -->
+      </div>
+    </div>
+
+    <!-- Kolom Siap -->
+    <div class="kds-column">
+      <div class="kds-column-header" style="background-color: var(--color-success); color: white;">
+        <h2>Siap Diantar</h2>
+        <span class="kds-badge" id="count-siap" style="background-color: white; color: var(--color-success);">0</span>
+      </div>
+      <div class="kds-column-content" id="col-siap">
+        <!-- Order cards here -->
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

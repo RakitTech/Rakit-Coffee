@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Rakit Coffee</title>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/admin.css">
+</head>
+
+<body class="admin-body">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h1 style="color: var(--color-accent); font-size: 24px;">Rakit<span style="color: var(--color-text-body);">Admin</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#dashboard" class="sidebar-item active">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard
+      </a>
+      <a href="#dashboard-menu" class="sidebar-item">
+        <span class="material-symbols-outlined">analytics</span>
+        Dashboard Menu
+      </a>
+      <a href="#menu" class="sidebar-item">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        Kelola Menu
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- DASHBOARD VIEW -->
+    <section id="view-dashboard" class="admin-view active">
+      <header class="admin-header">
+        <h2>Dashboard</h2>
+      </header>
+
+      <div class="admin-content">
+        <div class="global-filters section-block" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: var(--space-md) var(--space-lg);">
+          <div style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+            Filter Periode:
+          </div>
+          <select id="global-filter-mode" class="filter-modern" style="width: auto;">
+            <option value="daily">Harian</option>
+            <option value="monthly">Bulanan</option>
+            <option value="yearly">Tahunan</option>
+            <option value="range">Rentang Waktu</option>
+          </select>
+
+          <!-- Inputs -->
+          <input type="date" id="filter-daily" class="filter-modern filter-input-group" style="width: auto;">
+          
+          <input type="month" id="filter-monthly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+          
+          <select id="filter-yearly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+            <!-- JS populated -->
+          </select>
+
+          <div id="filter-range" class="filter-input-group" style="display: none; align-items: center; gap: 8px;">
+            <input type="date" id="filter-range-start" class="filter-modern" style="width: auto;">
+            <span style="font-size: 14px; color: var(--color-text-muted);">s/d</span>
+            <input type="date" id="filter-range-end" class="filter-modern" style="width: auto;">
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <h3 id="metric-orders-title">Total Pesanan (Harian)</h3>
+            <div class="metric-value" id="metric-orders">0</div>
+          </div>
+          <div class="metric-card">
+            <h3 id="metric-revenue-title">Pendapatan (Harian)</h3>
+            <div class="metric-value" id="metric-revenue">Rp 0</div>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <h3 style="margin: 0;">Master Data Penjualan</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="sales-search" class="filter-modern" placeholder="Cari ID / Nama..."
+                style="width: 180px;">
+              <select id="sales-filter-status" class="filter-modern"
+                style="width: 140px;">
+                <option value="ALL">Semua Status</option>
+                <option value="Diterima">Diterima</option>
+                <option value="Dimasak">Dimasak</option>
+                <option value="Siap">Siap</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Order ID</th>
+                  <th>Tanggal</th>
+                  <th>Waktu</th>
+                  <th>Pelanggan</th>
+                  <th>Meja</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="sales-table-body">
+                <!-- Data populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD MENU VIEW -->
+    <section id="view-dashboard-menu" class="admin-view">
+      <header class="admin-header">
+        <h2>Dashboard Menu</h2>
+      </header>
+      
+      <div class="admin-content">
+        <div class="global-filters section-block" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: var(--space-md) var(--space-lg);">
+          <div style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+            Filter Periode:
+          </div>
+          <select id="menu-filter-mode" class="filter-modern" style="width: auto;">
+            <option value="daily">Harian</option>
+            <option value="monthly">Bulanan</option>
+            <option value="yearly">Tahunan</option>
+            <option value="range">Rentang Waktu</option>
+          </select>
+
+          <!-- Inputs -->
+          <input type="date" id="menu-filter-daily" class="filter-modern filter-input-group" style="width: auto;">
+          <input type="month" id="menu-filter-monthly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+          <select id="menu-filter-yearly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+            <!-- JS populated -->
+          </select>
+
+          <div id="menu-filter-range" class="filter-input-group" style="display: none; align-items: center; gap: 8px;">
+            <input type="date" id="menu-filter-range-start" class="filter-modern" style="width: auto;">
+            <span style="font-size: 14px; color: var(--color-text-muted);">s/d</span>
+            <input type="date" id="menu-filter-range-end" class="filter-modern" style="width: auto;">
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h3 style="margin-top: 0; margin-bottom: 16px;">Analisis Penjualan Menu</h3>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px; text-align: center;">Peringkat</th>
+                  <th>Nama Menu</th>
+                  <th>Kategori</th>
+                  <th style="text-align: center;">Terjual</th>
+                  <th style="text-align: right;">Total Pendapatan</th>
+                </tr>
+              </thead>
+              <tbody id="menu-analysis-table-body">
+                <!-- Data populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENU VIEW -->
+    <section id="view-menu" class="admin-view">
+      <header class="admin-header" style="justify-content: space-between; display: flex;">
+        <h2>Kelola Menu</h2>
+        <button class="btn btn-primary">+ Tambah Menu</button>
+      </header>
+      <div class="admin-content">
+        <div class="section-block">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nama Produk</th>
+                  <th>Kategori</th>
+                  <th>Harga</th>
+                  <th>Ketersediaan</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="menu-table-body">
+                <!-- Menu populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Detail Pesanan -->
+  <div class="modal-overlay" id="order-detail-modal" style="display: none;">
+    <div class="modal-content" style="width: 480px; max-width: 90vw;">
+      <div class="modal-header">
+        <h3 id="modal-order-id" style="margin: 0;">Order #---</h3>
+        <button id="close-order-modal" class="btn btn-outline"
+          style="padding: 4px; border: none; background: transparent;"><span class="material-symbols-outlined"
+            style="font-size: 20px;">close</span></button>
+      </div>
+      <div class="modal-body" style="padding: var(--space-lg); max-height: 60vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+          <div>
+            <div style="font-size: 12px; color: var(--color-text-muted);">Pelanggan</div>
+            <div id="modal-customer-name" style="font-weight: 600;">---</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 12px; color: var(--color-text-muted);">Nomor Meja</div>
+            <div id="modal-table-num" style="font-weight: 600;">---</div>
+          </div>
+        </div>
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Daftar Pesanan:</div>
+        <div id="modal-order-items" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Item populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer"
+        style="padding: var(--space-md) var(--space-lg); border-top: 1px solid var(--color-surface-variant); display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-weight: 600;">Total</div>
+        <div id="modal-order-total" style="font-size: 18px; font-weight: 700; color: var(--color-accent);">Rp 0</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+
+</html>
