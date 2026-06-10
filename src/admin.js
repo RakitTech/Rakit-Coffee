@@ -1,5 +1,8 @@
 import { Store } from './store.js';
 
+let salesChartInstance = null;
+let ordersChartInstance = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   setupNavigation();
   initGlobalFilters();
@@ -21,7 +24,90 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('order-detail-modal').style.display = 'none';
     });
   }
+
+  setupSorting();
+  initCustomSelects();
 });
+
+function initCustomSelects() {
+  document.querySelectorAll('select.filter-modern').forEach(select => {
+    if (select.closest('.custom-select-wrapper')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+    if (select.style.width) wrapper.style.width = select.style.width;
+    if (select.style.display) wrapper.style.display = select.style.display;
+
+    select.style.display = 'none';
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    
+    const triggerText = document.createElement('span');
+    triggerText.textContent = select.options[select.selectedIndex]?.textContent || '';
+    
+    const triggerIcon = document.createElement('span');
+    triggerIcon.className = 'material-symbols-outlined';
+    triggerIcon.style.fontSize = '18px';
+    triggerIcon.style.color = 'var(--color-text-muted)';
+    triggerIcon.textContent = 'expand_more';
+
+    trigger.appendChild(triggerText);
+    trigger.appendChild(triggerIcon);
+    wrapper.appendChild(trigger);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown';
+    wrapper.appendChild(dropdown);
+
+    function renderOptions() {
+      dropdown.innerHTML = '';
+      Array.from(select.options).forEach(option => {
+        const optEl = document.createElement('div');
+        optEl.className = 'custom-select-option';
+        if (option.selected) optEl.classList.add('selected');
+        optEl.textContent = option.textContent;
+        
+        optEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          select.value = option.value;
+          triggerText.textContent = option.textContent;
+          wrapper.classList.remove('open');
+          
+          dropdown.querySelectorAll('.custom-select-option').forEach(el => el.classList.remove('selected'));
+          optEl.classList.add('selected');
+
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        dropdown.appendChild(optEl);
+      });
+    }
+
+    renderOptions();
+
+    const observer = new MutationObserver(() => {
+      renderOptions();
+      triggerText.textContent = select.options[select.selectedIndex]?.textContent || '';
+    });
+    observer.observe(select, { childList: true });
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.custom-select-wrapper.open').forEach(w => {
+        if (w !== wrapper) w.classList.remove('open');
+      });
+      wrapper.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target)) {
+        wrapper.classList.remove('open');
+      }
+    });
+  });
+}
 
 function setupNavigation() {
   const navItems = document.querySelectorAll('.sidebar-item');
@@ -76,15 +162,21 @@ function initGlobalFilters() {
     inputYearly.appendChild(opt);
   }
 
+  const toggleVisibility = (el, display) => {
+    const wrapper = el.closest('.custom-select-wrapper');
+    if (wrapper) wrapper.style.display = display;
+    else el.style.display = display;
+  };
+
   modeSelect.addEventListener('change', (e) => {
     inputDaily.style.display = 'none';
     inputMonthly.style.display = 'none';
-    inputYearly.style.display = 'none';
+    toggleVisibility(inputYearly, 'none');
     inputRange.style.display = 'none';
 
     if (e.target.value === 'daily') inputDaily.style.display = 'block';
     if (e.target.value === 'monthly') inputMonthly.style.display = 'block';
-    if (e.target.value === 'yearly') inputYearly.style.display = 'block';
+    if (e.target.value === 'yearly') toggleVisibility(inputYearly, 'block');
     if (e.target.value === 'range') inputRange.style.display = 'flex';
     
     renderDashboard();
@@ -125,15 +217,21 @@ function initMenuFilters() {
     inputYearly.appendChild(opt);
   }
 
+  const toggleVisibilityMenu = (el, display) => {
+    const wrapper = el.closest('.custom-select-wrapper');
+    if (wrapper) wrapper.style.display = display;
+    else el.style.display = display;
+  };
+
   modeSelect.addEventListener('change', (e) => {
     inputDaily.style.display = 'none';
     inputMonthly.style.display = 'none';
-    inputYearly.style.display = 'none';
+    toggleVisibilityMenu(inputYearly, 'none');
     inputRange.style.display = 'none';
 
     if (e.target.value === 'daily') inputDaily.style.display = 'inline-block';
     if (e.target.value === 'monthly') inputMonthly.style.display = 'inline-block';
-    if (e.target.value === 'yearly') inputYearly.style.display = 'inline-block';
+    if (e.target.value === 'yearly') toggleVisibilityMenu(inputYearly, 'inline-block');
     if (e.target.value === 'range') inputRange.style.display = 'flex';
     
     renderDashboardMenu();
@@ -254,8 +352,197 @@ function renderDashboard() {
     if (revenueTitle) revenueTitle.textContent = `Pendapatan ${suffix}`;
   }
 
+  // Chart Logic
+  const mode = document.getElementById('global-filter-mode').value;
+  const salesChartWrapper = document.getElementById('salesChartWrapper');
+  const salesChartEmptyState = document.getElementById('chart-empty-state');
+  const ordersChartWrapper = document.getElementById('ordersChartWrapper');
+  const ordersChartEmptyState = document.getElementById('orders-chart-empty-state');
+  
+  if (salesChartWrapper && ordersChartWrapper) {
+    if (mode === 'daily') {
+      salesChartWrapper.style.display = 'none';
+      salesChartEmptyState.style.display = 'flex';
+      ordersChartWrapper.style.display = 'none';
+      ordersChartEmptyState.style.display = 'flex';
+      
+      // Destroy charts if exists to free memory
+      if (salesChartInstance) {
+        salesChartInstance.destroy();
+        salesChartInstance = null;
+      }
+      if (ordersChartInstance) {
+        ordersChartInstance.destroy();
+        ordersChartInstance = null;
+      }
+    } else {
+      salesChartWrapper.style.display = 'block';
+      salesChartEmptyState.style.display = 'none';
+      ordersChartWrapper.style.display = 'block';
+      ordersChartEmptyState.style.display = 'none';
+      
+      renderSalesChart(globalFilteredOrders);
+      renderOrdersChart(globalFilteredOrders);
+    }
+  }
+
   // Render Sales Table with filtered data
   renderSalesTable(globalFilteredOrders);
+}
+
+function renderSalesChart(orders) {
+  const ctx = document.getElementById('salesChart');
+  if (!ctx) return;
+
+  // Aggregate by day
+  const dailyData = {};
+  orders.forEach(o => {
+    // Format timestamp to local date string (YYYY-MM-DD)
+    const dateObj = new Date(o.timestamp);
+    const dateKey = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    if (!dailyData[dateKey]) {
+      dailyData[dateKey] = {
+        timestamp: dateObj.setHours(0,0,0,0), // For sorting
+        revenue: 0
+      };
+    }
+    dailyData[dateKey].revenue += o.total;
+  });
+
+  // Sort by timestamp
+  const sortedKeys = Object.keys(dailyData).sort((a, b) => dailyData[a].timestamp - dailyData[b].timestamp);
+  
+  const labels = sortedKeys;
+  const dataPoints = sortedKeys.map(k => dailyData[k].revenue);
+
+  if (salesChartInstance) {
+    salesChartInstance.destroy();
+  }
+
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#AF8C53';
+
+  salesChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Pendapatan',
+        data: dataPoints,
+        borderColor: primaryColor,
+        backgroundColor: 'rgba(175, 140, 83, 0.2)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: primaryColor,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'Rp ' + value.toLocaleString('id-ID');
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderOrdersChart(orders) {
+  const ctx = document.getElementById('ordersChart');
+  if (!ctx) return;
+
+  const dailyData = {};
+  orders.forEach(o => {
+    const dateObj = new Date(o.timestamp);
+    const dateKey = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    
+    if (!dailyData[dateKey]) {
+      dailyData[dateKey] = {
+        timestamp: dateObj.setHours(0,0,0,0),
+        count: 0
+      };
+    }
+    dailyData[dateKey].count += 1;
+  });
+
+  const sortedKeys = Object.keys(dailyData).sort((a, b) => dailyData[a].timestamp - dailyData[b].timestamp);
+  
+  const labels = sortedKeys;
+  const dataPoints = sortedKeys.map(k => dailyData[k].count);
+
+  if (ordersChartInstance) {
+    ordersChartInstance.destroy();
+  }
+
+  // Recommended blue color for orders
+  const primaryColor = '#3b82f6';
+
+  ordersChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Pesanan',
+        data: dataPoints,
+        borderColor: primaryColor,
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: primaryColor,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.parsed.y + ' Pesanan';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            callback: function(value) {
+              return value;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderDashboardMenu() {
@@ -293,8 +580,43 @@ function renderDashboardMenu() {
     }
   });
 
-  // Convert to array and sort by quantity sold descending
-  const sortedSales = Object.values(itemSales).sort((a, b) => b.qtySold - a.qtySold);
+  // Convert to array and sort based on state
+  let sortedSales = Object.values(itemSales);
+
+  sortedSales.sort((a, b) => {
+    let valA, valB;
+    switch(sortStateMenu.col) {
+      case 'rank':
+      case 'qty':
+        valA = a.qtySold; valB = b.qtySold; break;
+      case 'name':
+        valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
+      case 'category':
+        valA = a.category.toLowerCase(); valB = b.category.toLowerCase(); break;
+      case 'revenue':
+        valA = a.revenue; valB = b.revenue; break;
+      default:
+        valA = a.qtySold; valB = b.qtySold;
+    }
+    if (valA < valB) return sortStateMenu.dir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortStateMenu.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Apply filters
+  const analysisSearch = document.getElementById('analysis-search');
+  const analysisCat = document.getElementById('analysis-filter-category');
+  
+  const searchTerm = analysisSearch ? analysisSearch.value.toLowerCase() : '';
+  const catTerm = analysisCat ? analysisCat.value : 'ALL';
+
+  if (searchTerm || catTerm !== 'ALL') {
+    sortedSales = sortedSales.filter(item => {
+      const matchSearch = item.name.toLowerCase().includes(searchTerm);
+      const matchCat = catTerm === 'ALL' || item.category === catTerm;
+      return matchSearch && matchCat;
+    });
+  }
 
   const tbody = document.getElementById('menu-analysis-table-body');
   if (!tbody) return;
@@ -328,25 +650,60 @@ function renderDashboardMenu() {
 }
 
 function renderSalesTable(baseOrders) {
-  const orders = baseOrders || Store.getOrders();
+  const orders = baseOrders || getGlobalFilteredOrders(Store.getOrders());
+  const menus = Store.getMenu();
   const searchInput = document.getElementById('sales-search');
-  const statusFilter = document.getElementById('sales-filter-status');
+  const catFilter = document.getElementById('sales-filter-category');
   const tbody = document.getElementById('sales-table-body');
   
   if (!tbody) return;
 
   const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-  const statusTerm = statusFilter ? statusFilter.value : 'ALL';
+  const catTerm = catFilter ? catFilter.value : 'ALL';
 
   // Filter orders
   let filteredOrders = orders.filter(order => {
-    const matchSearch = order.id.toLowerCase().includes(searchTerm) || order.customerName.toLowerCase().includes(searchTerm);
-    const matchStatus = statusTerm === 'ALL' || order.status === statusTerm;
-    return matchSearch && matchStatus;
+    const matchIdOrName = order.id.toLowerCase().includes(searchTerm) || order.customerName.toLowerCase().includes(searchTerm);
+    const matchItem = order.items.some(item => item.name.toLowerCase().includes(searchTerm));
+    const matchSearch = matchIdOrName || matchItem;
+    
+    const matchCat = catTerm === 'ALL' || order.items.some(item => {
+      const menuItem = menus.find(m => m.id === item.id);
+      return menuItem && menuItem.category === catTerm;
+    });
+
+    return matchSearch && matchCat;
   });
 
-  // Sort descending by timestamp
-  filteredOrders.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  // Sort based on state
+  filteredOrders.sort((a, b) => {
+    let valA, valB;
+    switch(sortStateSales.col) {
+      case 'no':
+      case 'date':
+      case 'time':
+        valA = new Date(a.timestamp).getTime();
+        valB = new Date(b.timestamp).getTime();
+        break;
+      case 'id':
+        valA = a.id; valB = b.id; break;
+      case 'customer':
+        valA = a.customerName.toLowerCase(); valB = b.customerName.toLowerCase(); break;
+      case 'table':
+        valA = a.table; valB = b.table; break;
+      case 'total':
+        valA = a.total; valB = b.total; break;
+      case 'status':
+        valA = a.status; valB = b.status; break;
+      default:
+        valA = new Date(a.timestamp).getTime();
+        valB = new Date(b.timestamp).getTime();
+    }
+    
+    if (valA < valB) return sortStateSales.dir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortStateSales.dir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   tbody.innerHTML = '';
 
@@ -390,7 +747,16 @@ window.viewOrderDetails = function(orderId, event) {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
 
+  // Calculate daily queue number
+  const orderDateStr = new Date(order.timestamp).toDateString();
+  const sameDayOrders = orders.filter(o => new Date(o.timestamp).toDateString() === orderDateStr);
+  sameDayOrders.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // Sort chronological
+  const queueNo = sameDayOrders.findIndex(o => o.id === order.id) + 1;
+
   document.getElementById('modal-order-id').textContent = `Order ${order.id}`;
+  const queueEl = document.getElementById('modal-queue-num');
+  if (queueEl) queueEl.textContent = `#${queueNo}`;
+  
   document.getElementById('modal-customer-name').textContent = order.customerName;
   document.getElementById('modal-table-num').textContent = order.table;
   document.getElementById('modal-order-total').textContent = `Rp ${order.total.toLocaleString('id-ID')}`;
@@ -450,18 +816,61 @@ window.viewOrderDetails = function(orderId, event) {
 // Setup Event Listeners for Filters
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('sales-search');
-  const statusFilter = document.getElementById('sales-filter-status');
+  const salesCatFilter = document.getElementById('sales-filter-category');
   if (searchInput) searchInput.addEventListener('input', () => renderSalesTable());
-  if (statusFilter) statusFilter.addEventListener('change', () => renderSalesTable());
+  if (salesCatFilter) salesCatFilter.addEventListener('change', () => renderSalesTable());
+
+  const menus = Store.getMenu();
+
+  const analysisSearch = document.getElementById('analysis-search');
+  const analysisCat = document.getElementById('analysis-filter-category');
+  if (analysisSearch) analysisSearch.addEventListener('input', renderDashboardMenu);
+  if (analysisCat) analysisCat.addEventListener('change', renderDashboardMenu);
+
+  const manageMenuSearch = document.getElementById('manage-menu-search');
+  if (manageMenuSearch) manageMenuSearch.addEventListener('input', renderMenuTable);
+
+  // Populate category options
+  const categories = [...new Set(menus.map(m => m.category))];
+  
+  if (analysisCat) {
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      analysisCat.appendChild(opt);
+    });
+  }
+  
+  if (salesCatFilter) {
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      salesCatFilter.appendChild(opt);
+    });
+  }
 });
 
 function renderMenuTable() {
   const menus = Store.getMenu();
+  const searchInput = document.getElementById('manage-menu-search');
+  const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+  
+  const filteredMenus = menus.filter(item => 
+    item.name.toLowerCase().includes(searchTerm)
+  );
+
   const tbody = document.getElementById('menu-table-body');
   if(!tbody) return;
   tbody.innerHTML = '';
 
-  menus.forEach(item => {
+  if (filteredMenus.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 24px;">Tidak ada menu yang sesuai.</td></tr>';
+    return;
+  }
+
+  filteredMenus.forEach(item => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -488,3 +897,50 @@ function renderMenuTable() {
 window.toggleMenu = function (id, isAvailable) {
   Store.updateMenu(id, { available: isAvailable });
 };
+
+// Sorting Logic State
+let sortStateSales = { col: 'date', dir: 'desc' };
+let sortStateMenu = { col: 'qty', dir: 'desc' };
+
+function setupSorting() {
+  document.querySelectorAll('#view-dashboard .sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortStateSales.col === col) {
+        sortStateSales.dir = sortStateSales.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortStateSales.col = col;
+        sortStateSales.dir = 'asc';
+      }
+      updateSortIcons('#view-dashboard', sortStateSales);
+      renderSalesTable();
+    });
+  });
+
+  document.querySelectorAll('#view-dashboard-menu .sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortStateMenu.col === col) {
+        sortStateMenu.dir = sortStateMenu.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortStateMenu.col = col;
+        sortStateMenu.dir = 'asc';
+      }
+      updateSortIcons('#view-dashboard-menu', sortStateMenu);
+      renderDashboardMenu();
+    });
+  });
+}
+
+function updateSortIcons(containerSelector, state) {
+  document.querySelectorAll(`${containerSelector} .sortable`).forEach(th => {
+    th.classList.remove('active');
+    const icon = th.querySelector('.sort-icon');
+    if(icon) icon.textContent = 'swap_vert';
+    
+    if (th.dataset.sort === state.col) {
+      th.classList.add('active');
+      icon.textContent = state.dir === 'asc' ? 'arrow_upward' : 'arrow_downward';
+    }
+  });
+}

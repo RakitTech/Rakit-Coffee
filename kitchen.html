@@ -4,18 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rakit Coffee - KDS</title>
-  <link rel="stylesheet" href="./src/css/design-system.css">
-  <link rel="stylesheet" href="./src/css/kitchen.css">
-  <script type="module" src="./src/kitchen.js"></script>
+  <link rel="stylesheet" href="./src/css/design-system.css?t=99991">
+  <link rel="stylesheet" href="./src/css/kitchen.css?t=99996">
+  <script type="module" src="./src/kitchen.js?t=99992"></script>
 </head>
 <body class="kds-body">
   
   <header class="kds-header">
     <div class="kds-brand">
-      <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent);">kitchen</span>
+      <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-surface-lowest);">kitchen</span>
       <h1>Kitchen Display System</h1>
     </div>
-    <div class="kds-time" id="clock">00:00:00</div>
+    <div class="kds-time" id="clock" style="color: var(--color-surface-lowest);">00:00:00</div>
   </header>
 
   <main class="kds-board">
@@ -32,9 +32,9 @@
 
     <!-- Kolom Dimasak -->
     <div class="kds-column">
-      <div class="kds-column-header" style="background-color: var(--color-accent); color: white;">
+      <div class="kds-column-header" style="background-color: #3b82f6; color: white;">
         <h2>Sedang Dimasak</h2>
-        <span class="kds-badge" id="count-dimasak" style="background-color: white; color: var(--color-accent);">0</span>
+        <span class="kds-badge" id="count-dimasak" style="background-color: white; color: #3b82f6;">0</span>
       </div>
       <div class="kds-column-content" id="col-dimasak">
         <!-- Order cards here -->

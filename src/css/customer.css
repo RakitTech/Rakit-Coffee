@@ -9,7 +9,7 @@
   align-items: center;
   padding: 0 var(--space-md);
   height: var(--nav-height);
-  background-color: rgba(49, 48, 46, 0.8);
+  background: linear-gradient(135deg, #735932 0%, #ac8d59 30%, #c8ae6a 50%, #d4ad6f 70%, #8E6E3D 100%) !important;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -20,16 +20,16 @@
 }
 
 .table-badge {
-  background-color: var(--color-accent);
+  background-color: rgb(49, 40, 29);
   padding: 4px 12px;
   border-radius: var(--radius-sm);
-  color: var(--color-on-accent);
+  color: rgb(226, 220, 211);
 }
 
 /* Page Layout */
 .page-container {
   padding-top: var(--nav-height);
-  padding-bottom: 120px;
+  padding-bottom: 1120px; /* Ditambah 1000px untuk simulasi scroll */
   min-height: 100vh;
 }
 
@@ -65,10 +65,11 @@
 .category-list {
   display: flex;
   overflow-x: auto;
-  padding: 16px var(--space-md);
-  gap: var(--space-md);
+  padding: 0 var(--space-md);
+  gap: var(--space-lg);
   align-items: center;
   list-style: none;
+  position: relative;
 }
 
 .category-tab {
@@ -76,28 +77,41 @@
   font-weight: 700;
   font-size: 14px;
   letter-spacing: 0.05em;
-  background-color: var(--color-surface-lowest);
-  color: var(--color-primary);
+  background-color: transparent;
+  color: var(--color-text-muted);
   border: none;
   white-space: nowrap;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  padding: 16px 4px;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .category-tab:hover {
-  background-color: var(--color-surface-lowest);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  color: var(--color-primary);
 }
 
 .category-tab.active {
+  color: var(--color-primary);
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
   background-color: var(--color-accent);
-  color: var(--color-on-accent);
-  transform: translateY(1px);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Menu Container */
+#menu-container {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.category-section {
+  scroll-margin-top: 130px; /* Offset for scrollIntoView */
 }
 
 /* Menu Grid */
@@ -106,8 +120,6 @@
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-md);
   padding: var(--space-md);
-  max-width: 1280px;
-  margin: 0 auto;
 }
 
 @media (min-width: 768px) {
@@ -119,19 +131,20 @@
 }
 
 .category-heading {
-  grid-column: 1 / -1;
   font-size: 20px;
   font-weight: 700;
   color: var(--color-primary);
   margin-top: 0;
   padding-top: 16px;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0;
   padding-bottom: 8px;
   border-bottom: 2px solid var(--color-surface-variant);
-  scroll-margin-top: 130px; /* Account for sticky nav + category tabs */
   position: sticky;
-  top: calc(var(--nav-height) + 55px);
-  background-color: var(--color-surface);
+  top: calc(var(--nav-height) + 53px);
+  background-color: rgba(252, 249, 245, 0.95);
+  backdrop-filter: blur(4px);
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
   z-index: 30;
 }
 

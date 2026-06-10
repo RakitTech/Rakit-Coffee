@@ -34,9 +34,9 @@ if (!localStorage.getItem('rakit_menu')) {
   localStorage.setItem('rakit_menu', JSON.stringify(initialMenu));
 }
 
-if (!localStorage.getItem('rakit_orders') || localStorage.getItem('clear_old_orders_1') !== 'true') {
+if (!localStorage.getItem('rakit_orders') || localStorage.getItem('clear_old_orders_2') !== 'true') {
   localStorage.setItem('rakit_orders', JSON.stringify([]));
-  localStorage.setItem('clear_old_orders_1', 'true');
+  localStorage.setItem('clear_old_orders_2', 'true');
 }
 
 export const Store = {
@@ -60,10 +60,20 @@ export const Store = {
 
   addOrder(orderData) {
     const orders = this.getOrders();
+    const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+    
+    const itemsWithStatus = orderData.items.map(item => ({
+      ...item,
+      itemId: 'ITM-' + Math.floor(10000 + Math.random() * 90000),
+      status: 'Diterima',
+      completedAt: null
+    }));
+
     const newOrder = {
       ...orderData,
-      id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
-      status: 'Diterima', // Diterima -> Dimasak -> Siap
+      id: orderId,
+      items: itemsWithStatus,
+      status: 'Diterima', // Still tracks overall order status
       timestamp: new Date().toISOString()
     };
     orders.push(newOrder);
@@ -82,6 +92,38 @@ export const Store = {
       }
       localStorage.setItem('rakit_orders', JSON.stringify(orders));
       window.dispatchEvent(new Event('storage'));
+    }
+  },
+
+  updateOrderItemStatus(orderId, itemId, newStatus) {
+    const orders = this.getOrders();
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      const item = order.items.find(i => i.itemId === itemId);
+      if (item) {
+        item.status = newStatus;
+        if (newStatus === 'Siap') {
+          item.completedAt = new Date().toISOString();
+        }
+
+        // Check if all items in this order are now 'Siap'
+        const allSiap = order.items.every(i => i.status === 'Siap');
+        if (allSiap) {
+          order.status = 'Siap';
+          if (!order.completedAt) {
+            order.completedAt = new Date().toISOString();
+          }
+        } else {
+          // If at least one item is Dimasak or Siap, order status should logically be Dimasak
+          const anyDimasak = order.items.some(i => i.status === 'Dimasak' || i.status === 'Siap');
+          if (anyDimasak && order.status === 'Diterima') {
+            order.status = 'Dimasak';
+          }
+        }
+
+        localStorage.setItem('rakit_orders', JSON.stringify(orders));
+        window.dispatchEvent(new Event('storage'));
+      }
     }
   },
 

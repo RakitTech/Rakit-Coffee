@@ -11,6 +11,54 @@ document.addEventListener('DOMContentLoaded', () => {
   updateCartUI();
   updateTrackerStatus();
 
+  // Scroll Spy for Category Tabs
+  window.addEventListener('scroll', () => {
+    if (typeof isClickScrolling !== 'undefined' && isClickScrolling) return;
+
+    const sections = Array.from(document.querySelectorAll('.category-section'));
+    const tabs = document.querySelectorAll('.category-tab');
+    const indicator = document.getElementById('category-indicator');
+    
+    if (sections.length === 0 || tabs.length === 0) return;
+
+    let currentActive = null;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const rect = sections[i].getBoundingClientRect();
+      if (rect.top <= 350) {
+        currentActive = sections[i];
+        break;
+      }
+    }
+    
+    if (!currentActive) {
+      currentActive = sections[0];
+    }
+
+    if (currentActive) {
+      const heading = currentActive.querySelector('.category-heading');
+      if (!heading) return;
+      const catName = heading.textContent.trim();
+      tabs.forEach(tab => {
+        if (tab.textContent.trim() === catName && !tab.classList.contains('active')) {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          if (indicator) {
+            indicator.style.width = tab.offsetWidth + 'px';
+            indicator.style.left = tab.offsetLeft + 'px';
+            
+            // Auto scroll the category-list horizontally without interrupting window scroll
+            const list = tab.closest('.category-list');
+            if (list) {
+              const scrollLeft = tab.offsetLeft - (list.clientWidth / 2) + (tab.clientWidth / 2);
+              list.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
+          }
+        }
+      });
+    }
+  }, { passive: true });
+
   // Listen for changes from Admin/Kitchen
   Store.subscribe(() => {
     renderMenu();
@@ -32,11 +80,17 @@ function renderMenu() {
     const categoryItems = menus.filter(m => m.category === category);
     
     if (categoryItems.length > 0) {
+      const section = document.createElement('div');
+      section.className = 'category-section';
+      section.id = 'cat-' + category.replace(/\s+/g, '-');
+
       const heading = document.createElement('h2');
       heading.className = 'category-heading';
-      heading.id = 'cat-' + category.replace(/\s+/g, '-');
       heading.textContent = category;
-      menuContainer.appendChild(heading);
+      section.appendChild(heading);
+
+      const grid = document.createElement('div');
+      grid.className = 'menu-grid';
 
       categoryItems.forEach(item => {
     const card = document.createElement('article');
@@ -82,11 +136,15 @@ function renderMenu() {
         </div>
       </div>
     `;
-    menuContainer.appendChild(card);
+        grid.appendChild(card);
       });
+      section.appendChild(grid);
+      menuContainer.appendChild(section);
     }
   });
 }
+
+let isClickScrolling = false;
 
 function setupNavigation() {
   const navItems = document.querySelectorAll('.nav-item');
@@ -124,8 +182,26 @@ function setupNavigation() {
 
 function setupCategoryFilter() {
   const tabs = document.querySelectorAll('.category-tab');
+  const indicator = document.getElementById('category-indicator');
+
+  function updateIndicator(activeTab) {
+    if (!indicator || !activeTab) return;
+    indicator.style.width = activeTab.offsetWidth + 'px';
+    indicator.style.left = activeTab.offsetLeft + 'px';
+  }
+
+  // Set initial position
+  const initialActive = document.querySelector('.category-tab.active');
+  if (initialActive) {
+    // Need a slight delay to ensure fonts/layout are rendered for correct offsetWidth
+    setTimeout(() => updateIndicator(initialActive), 100);
+  }
+
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
+      isClickScrolling = true;
+      setTimeout(() => { isClickScrolling = false; }, 800); // Wait for smooth scroll to finish
+
       const catName = tab.textContent.trim();
       
       if (catName === 'SEMUA') {
@@ -141,6 +217,14 @@ function setupCategoryFilter() {
       // Update active styling
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      updateIndicator(tab);
+      
+      // Also scroll the nav list horizontally to center the active tab
+      const list = tab.closest('.category-list');
+      if (list) {
+        const scrollLeft = tab.offsetLeft - (list.clientWidth / 2) + (tab.clientWidth / 2);
+        list.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
     });
   });
 }
@@ -405,7 +489,7 @@ function updateTrackerStatus() {
   
   // Refresh order data
   const allOrders = Store.getOrders();
-  const myOrders = myOrderIds.map(id => allOrders.find(o => o.id === id)).filter(Boolean);
+  const myOrders = myOrderIds.map(id => allOrders.find(o => o.id === id)).filter(Boolean).reverse();
   
   activeState.innerHTML = '';
   

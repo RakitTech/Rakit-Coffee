@@ -18,7 +18,8 @@
   --color-text-muted: #838483;
   --color-border: rgba(0, 0, 0, 0.1);
   --color-error: #ba1a1a;
-  --color-success: #2e7d32;
+  --color-success: #22c55e; /* Bright green */
+  --color-info: #3b82f6; /* Bright blue */
 
   /* Typography */
   --font-heading: 'Playfair Display', serif;

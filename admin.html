@@ -12,7 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="./src/css/design-system.css">
-  <link rel="stylesheet" href="./src/css/admin.css">
+  <link rel="stylesheet" href="./src/css/admin.css?v=14">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="admin-body">
@@ -23,7 +24,7 @@
     <nav class="sidebar-nav">
       <a href="#dashboard" class="sidebar-item active">
         <span class="material-symbols-outlined">dashboard</span>
-        Dashboard
+        Dashboard Penjualan
       </a>
       <a href="#dashboard-menu" class="sidebar-item">
         <span class="material-symbols-outlined">analytics</span>
@@ -41,13 +42,13 @@
     <!-- DASHBOARD VIEW -->
     <section id="view-dashboard" class="admin-view active">
       <header class="admin-header">
-        <h2>Dashboard</h2>
+        <h2 style="color: white;">Dashboard Penjualan</h2>
       </header>
 
       <div class="admin-content">
-        <div class="global-filters section-block" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: var(--space-md) var(--space-lg);">
-          <div style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+        <div class="global-filters" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">calendar_month</span>
             Filter Periode:
           </div>
           <select id="global-filter-mode" class="filter-modern" style="width: auto;">
@@ -73,14 +74,37 @@
           </div>
         </div>
 
-        <div class="metrics-grid">
+        <div class="dashboard-grid-2x2">
+          <!-- Row 1: Orders -->
           <div class="metric-card">
             <h3 id="metric-orders-title">Total Pesanan (Harian)</h3>
             <div class="metric-value" id="metric-orders">0</div>
           </div>
+          <div class="section-block" id="orders-chart-container">
+            <h3 style="margin-top: 0; margin-bottom: 16px;">Grafik Tren Pesanan</h3>
+            <div style="position: relative; height: 160px; width: 100%;" id="ordersChartWrapper">
+              <canvas id="ordersChart"></canvas>
+            </div>
+            <div id="orders-chart-empty-state" style="display: none; height: 160px; flex-direction: column; align-items: center; justify-content: center; color: var(--color-text-muted); font-style: italic; background-color: var(--color-surface); border-radius: var(--radius-md);">
+              <span class="material-symbols-outlined" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;">show_chart</span>
+              Grafik tidak tersedia pada filter Harian
+            </div>
+          </div>
+
+          <!-- Row 2: Revenue -->
           <div class="metric-card">
             <h3 id="metric-revenue-title">Pendapatan (Harian)</h3>
             <div class="metric-value" id="metric-revenue">Rp 0</div>
+          </div>
+          <div class="section-block" id="sales-chart-container">
+            <h3 style="margin-top: 0; margin-bottom: 16px;">Grafik Tren Penjualan</h3>
+            <div style="position: relative; height: 160px; width: 100%;" id="salesChartWrapper">
+              <canvas id="salesChart"></canvas>
+            </div>
+            <div id="chart-empty-state" style="display: none; height: 160px; flex-direction: column; align-items: center; justify-content: center; color: var(--color-text-muted); font-style: italic; background-color: var(--color-surface); border-radius: var(--radius-md);">
+              <span class="material-symbols-outlined" style="font-size: 32px; margin-bottom: 8px; opacity: 0.5;">bar_chart</span>
+              Grafik tidak tersedia pada filter Harian
+            </div>
           </div>
         </div>
 
@@ -89,14 +113,9 @@
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
             <h3 style="margin: 0;">Master Data Penjualan</h3>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <input type="text" id="sales-search" class="filter-modern" placeholder="Cari ID / Nama..."
-                style="width: 180px;">
-              <select id="sales-filter-status" class="filter-modern"
-                style="width: 140px;">
-                <option value="ALL">Semua Status</option>
-                <option value="Diterima">Diterima</option>
-                <option value="Dimasak">Dimasak</option>
-                <option value="Siap">Siap</option>
+              <input type="text" id="sales-search" class="filter-modern" placeholder="Cari ID / Nama / Menu..." style="width: 200px;">
+              <select id="sales-filter-category" class="filter-modern" style="width: 140px;">
+                <option value="ALL">Semua Kategori</option>
               </select>
             </div>
           </div>
@@ -104,14 +123,14 @@
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>No</th>
-                  <th>Order ID</th>
-                  <th>Tanggal</th>
-                  <th>Waktu</th>
-                  <th>Pelanggan</th>
-                  <th>Meja</th>
-                  <th>Total</th>
-                  <th>Status</th>
+                  <th class="sortable" data-sort="no">No <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="id">Order ID <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable active" data-sort="date">Tanggal <span class="material-symbols-outlined sort-icon">arrow_downward</span></th>
+                  <th class="sortable" data-sort="time">Waktu <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="customer">Pelanggan <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="table">Meja <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="total">Total <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="status">Status <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -127,13 +146,13 @@
     <!-- DASHBOARD MENU VIEW -->
     <section id="view-dashboard-menu" class="admin-view">
       <header class="admin-header">
-        <h2>Dashboard Menu</h2>
+        <h2 style="color: white;">Dashboard Menu</h2>
       </header>
       
       <div class="admin-content">
-        <div class="global-filters section-block" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: var(--space-md) var(--space-lg);">
-          <div style="font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+        <div class="global-filters" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">calendar_month</span>
             Filter Periode:
           </div>
           <select id="menu-filter-mode" class="filter-modern" style="width: auto;">
@@ -158,16 +177,24 @@
         </div>
 
         <div class="section-block">
-          <h3 style="margin-top: 0; margin-bottom: 16px;">Analisis Penjualan Menu</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <h3 style="margin: 0;">Analisis Penjualan Menu</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="analysis-search" class="filter-modern" placeholder="Cari Nama Menu..." style="width: 180px;">
+              <select id="analysis-filter-category" class="filter-modern" style="width: 140px;">
+                <option value="ALL">Semua Kategori</option>
+              </select>
+            </div>
+          </div>
           <div class="table-container">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th style="width: 60px; text-align: center;">Peringkat</th>
-                  <th>Nama Menu</th>
-                  <th>Kategori</th>
-                  <th style="text-align: center;">Terjual</th>
-                  <th style="text-align: right;">Total Pendapatan</th>
+                  <th class="sortable" data-sort="rank" style="width: 100px; text-align: center;">Peringkat <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="name">Nama Menu <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="category">Kategori <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable active" data-sort="qty" style="text-align: center;">Terjual <span class="material-symbols-outlined sort-icon">arrow_downward</span></th>
+                  <th class="sortable" data-sort="revenue" style="text-align: right;">Total Pendapatan <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
                 </tr>
               </thead>
               <tbody id="menu-analysis-table-body">
@@ -182,11 +209,17 @@
     <!-- MENU VIEW -->
     <section id="view-menu" class="admin-view">
       <header class="admin-header" style="justify-content: space-between; display: flex;">
-        <h2>Kelola Menu</h2>
-        <button class="btn btn-primary">+ Tambah Menu</button>
+        <h2 style="color: white;">Kelola Menu</h2>
+        <button class="btn btn-primary" style="background-color: #8E6E3D;">+ Tambah Menu</button>
       </header>
       <div class="admin-content">
         <div class="section-block">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <h3 style="margin: 0;">Daftar Menu Tersedia</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="manage-menu-search" class="filter-modern" placeholder="Cari Nama Menu..." style="width: 240px; border: 1px solid var(--color-surface-variant);">
+            </div>
+          </div>
           <div class="table-container">
             <table class="data-table">
               <thead>
@@ -219,7 +252,11 @@
             style="font-size: 20px;">close</span></button>
       </div>
       <div class="modal-body" style="padding: var(--space-lg); max-height: 60vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px; align-items: flex-end;">
+          <div>
+            <div style="font-size: 12px; color: var(--color-text-muted);">No. Antrean</div>
+            <div id="modal-queue-num" style="font-weight: 700; font-size: 20px; color: var(--color-accent);">#--</div>
+          </div>
           <div>
             <div style="font-size: 12px; color: var(--color-text-muted);">Pelanggan</div>
             <div id="modal-customer-name" style="font-weight: 600;">---</div>
@@ -242,7 +279,7 @@
     </div>
   </div>
 
-  <script type="module" src="/src/admin.js"></script>
+  <script type="module" src="/src/admin.js?v=14"></script>
 </body>
 
 </html>

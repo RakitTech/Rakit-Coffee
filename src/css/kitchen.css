@@ -8,13 +8,19 @@
 
 .kds-header {
   height: 64px;
-  background-color: var(--color-surface-lowest);
+  background: linear-gradient(135deg, #735932 0%, #ac8d59 30%, #c8ae6a 50%, #d4ad6f 70%, #8E6E3D 100%);
+  color: var(--color-surface-lowest);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-lg);
-  border-bottom: 1px solid var(--color-surface-variant);
-  box-shadow: var(--shadow-sm);
+  padding: var(--space-md) var(--space-xl);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.kds-header h1 {
+  font-size: 24px;
+  color: var(--color-surface-lowest);
+  margin: 0;
 }
 
 .kds-brand {
@@ -36,7 +42,7 @@
 .kds-board {
   flex-grow: 1;
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   padding: var(--space-md);
   overflow-x: auto;
 }
@@ -49,6 +55,13 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kds-column:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
 .kds-column-header {
@@ -62,6 +75,7 @@
 
 .kds-column-header h2 {
   font-size: 18px;
+  color: inherit;
 }
 
 .kds-badge {
