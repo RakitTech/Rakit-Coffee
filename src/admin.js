@@ -1,3 +1,5 @@
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 import { Store } from './store.js';
 
 let salesChartInstance = null;
@@ -1254,9 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (btnTambah) {
     btnTambah.addEventListener('click', () => {
-      // Setup datalist
       renderCategoryOptions('category-list-options');
-      
       document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-add-menu').classList.add('active');
     });
@@ -1280,19 +1280,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let currentCropper = null;
+  let currentPreviewTarget = null;
+
+  const openCropperModal = (file, previewTargetId) => {
+    if (currentCropper) {
+      currentCropper.destroy();
+      currentCropper = null;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const cropTarget = document.getElementById('crop-image-target');
+      cropTarget.src = e.target.result;
+      document.getElementById('crop-image-modal').style.display = 'flex';
+      
+      currentPreviewTarget = previewTargetId;
+      
+      setTimeout(() => {
+        currentCropper = new Cropper(cropTarget, {
+          aspectRatio: 1, // 1:1 Square
+          viewMode: 1,
+        });
+      }, 100);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const addImageInput = document.getElementById('add-menu-image');
   if (addImageInput) {
     addImageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('add-menu-preview');
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-      }
+      if (file) openCropperModal(file, 'add-menu-preview');
     });
   }
 
@@ -1300,17 +1318,38 @@ document.addEventListener('DOMContentLoaded', () => {
   if (editImageInput) {
     editImageInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const preview = document.getElementById('edit-menu-preview');
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-        }
-        reader.readAsDataURL(file);
-      }
+      if (file) openCropperModal(file, 'edit-menu-preview');
     });
   }
+
+  const closeCrop = () => {
+    document.getElementById('crop-image-modal').style.display = 'none';
+    if (currentCropper) {
+      currentCropper.destroy();
+      currentCropper = null;
+    }
+    document.getElementById('add-menu-image').value = '';
+    document.getElementById('edit-menu-image').value = '';
+  };
+
+  document.getElementById('btn-cancel-crop')?.addEventListener('click', closeCrop);
+  document.getElementById('close-crop-modal')?.addEventListener('click', closeCrop);
+
+  document.getElementById('btn-save-crop')?.addEventListener('click', () => {
+    if (!currentCropper) return;
+    const croppedImageBase64 = currentCropper.getCroppedCanvas({
+      width: 600,
+      height: 600,
+      fillColor: '#fff',
+    }).toDataURL('image/jpeg', 0.8);
+
+    const preview = document.getElementById(currentPreviewTarget);
+    if (preview) {
+      preview.src = croppedImageBase64;
+      preview.style.display = 'block';
+    }
+    closeCrop();
+  });
 
   const addForm = document.getElementById('add-menu-form');
   if (addForm) {
@@ -1335,7 +1374,6 @@ document.addEventListener('DOMContentLoaded', () => {
         available: true
       });
 
-      // Save category if it's new
       const categories = Store.getCategories();
       if (!categories.includes(category)) {
         categories.push(category);
@@ -1363,14 +1401,13 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const updateData = { name, category, price, desc };
       
-      const fileInput = document.getElementById('edit-menu-image');
-      if (fileInput.files.length > 0) {
-        updateData.img = document.getElementById('edit-menu-preview').src;
+      const imgPreview = document.getElementById('edit-menu-preview');
+      if (imgPreview.style.display === 'block') {
+        updateData.img = imgPreview.src;
       }
 
       Store.updateMenu(id, updateData);
 
-      // Save category if it's new
       const categories = Store.getCategories();
       if (!categories.includes(category)) {
         categories.push(category);

@@ -370,6 +370,27 @@
     </div>
   </div>
 
+  <!-- Modal Crop Gambar -->
+  <div class="modal-overlay" id="crop-image-modal" style="display: none; z-index: 9999;">
+    <div class="modal-content" style="width: 600px; max-width: 90vw;">
+      <div class="modal-header">
+        <h3 style="margin: 0;">Sesuaikan Gambar Menu</h3>
+        <button id="close-crop-modal" class="btn btn-outline" style="padding: 4px; border: none; background: transparent;">
+          <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: var(--space-lg); max-height: 60vh; overflow-y: auto; background-color: #000; display: flex; justify-content: center;">
+        <div style="width: 100%; max-height: 400px; overflow: hidden;">
+          <img id="crop-image-target" src="" style="max-width: 100%; display: block;">
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: var(--space-md) var(--space-lg); border-top: 1px solid var(--color-surface-variant); display: flex; justify-content: flex-end; gap: 12px;">
+        <button id="btn-cancel-crop" class="btn btn-outline">Batal</button>
+        <button id="btn-save-crop" class="btn btn-primary" style="background-color: var(--color-success); color: white;">Terapkan Potongan</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="/src/admin.js?v=14"></script>
 </body>
 

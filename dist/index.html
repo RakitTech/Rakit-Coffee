@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rakit Coffee - Menu</title>
+  <script type="module" crossorigin src="/assets/main-Bby0qmsU.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/store-Cz5k5dBT.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-gzmfgaOL.css">
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="top-app-bar">
+    <h1>Rakit Coffee</h1>
+    <div class="table-badge">
+      <span class="text-label">MEJA 12</span>
+    </div>
+  </header>
+
+  <!-- Views Container -->
+  <div class="page-container">
+    
+    <!-- MENU VIEW -->
+    <section id="view-menu" class="view-section active">
+      <div class="hero-section">
+        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkraCqif2SxQdRwm0wKEz-FPHEhuYSr8Ko3_4FEPVLtungLI4aI0N2jmDKH9059vVGTBs09z-9fzaScFzSdQDsnKsOC6euhHRNeaIAlGovJZP2g2xD18ZvX7TsFD34tkMlMVL3LUoxlvRHwrv06fVIJmYnAEms23eZuoiyPnPFVrHUZTjE7KYnZpZr8VukCVoZTkQMdXyIsMK0X36VNerL8PCR5FCkjyqPU2lGiDg9jW42X2-w24ISH8RfpyVt2znhJu-sj2esU-U" alt="Rakit Coffee">
+        <div class="hero-overlay"></div>
+      </div>
+
+      <nav class="category-nav">
+        <ul class="category-list">
+          <li class="category-tab active">SIGNATURE</li>
+          <li class="category-tab">KOPI</li>
+          <li class="category-tab">MAKANAN</li>
+          <li class="category-tab">CAMILAN</li>
+          <div class="tab-indicator" id="category-indicator"></div>
+        </ul>
+      </nav>
+
+      <main id="menu-container">
+        <!-- Menu Items Rendered Here via JS -->
+      </main>
+    </section>
+
+    <!-- CART & CHECKOUT VIEW -->
+    <section id="view-cart" class="view-section">
+      <div style="padding: var(--space-md); max-width: 600px; margin: 0 auto;">
+        <h2 style="margin-bottom: var(--space-md);">Keranjang Pesanan</h2>
+        
+        <div id="cart-items-container" class="cart-list">
+          <!-- Cart Items Here -->
+        </div>
+
+        <div style="border-top: 1px solid var(--color-surface-variant); padding-top: var(--space-md);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-lg);">
+            <span style="font-weight: 600; font-size: 18px;">Total</span>
+            <span id="cart-page-total" style="font-weight: 600; font-size: 18px; color: var(--color-accent);">Rp 0</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="customer-name">Nama Pelanggan <span style="color: var(--color-error);">*</span></label>
+            <input type="text" id="customer-name" class="form-input" placeholder="Masukkan nama Anda" required>
+          </div>
+
+          <button id="btn-checkout" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="processCheckout()">
+            BAYAR SEKARANG
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRACKER VIEW -->
+    <section id="view-tracker" class="view-section">
+      
+      <!-- Empty State -->
+      <div id="tracker-empty-state" style="text-align: center; padding: 64px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+        <span class="material-symbols-outlined" style="font-size: 64px; color: var(--color-surface-variant);">receipt_long</span>
+        <h2 style="color: var(--color-text-body); font-size: 20px;">Belum Ada Pesanan Aktif</h2>
+        <p style="color: var(--color-text-muted); font-size: 14px;">Pesanan yang sedang diproses akan tampil di sini.</p>
+        <button class="btn btn-outline" style="margin-top: 16px;" onclick="document.querySelector('.nav-item[href=\'#view-menu\']').click()">Lihat Menu</button>
+      </div>
+
+      <!-- Active State -->
+      <div class="tracker-container" id="tracker-active-state" style="display: none;">
+        <!-- Dynamically populated multiple orders -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Floating Cart Bar -->
+  <div class="cart-bar-container" id="floating-cart-bar" style="display: none;">
+    <div class="cart-bar">
+      <div class="cart-info">
+        <span class="text-label" id="cart-count">0 ITEM</span>
+        <span class="cart-amount" id="cart-total">Rp 0</span>
+      </div>
+      <div class="cart-action">
+        <span class="text-label">LIHAT KERANJANG</span>
+        <span class="material-symbols-outlined">chevron_right</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav Bar -->
+  <nav class="bottom-nav">
+    <a href="#view-menu" class="nav-item active">
+      <span class="material-symbols-outlined">restaurant_menu</span>
+      <span class="text-label">MENU</span>
+    </a>
+    <a href="#view-cart" class="nav-item">
+      <span class="material-symbols-outlined">shopping_cart</span>
+      <span class="text-label">KERANJANG</span>
+    </a>
+    <a href="#view-tracker" class="nav-item">
+      <span class="material-symbols-outlined">receipt_long</span>
+      <span class="text-label">STATUS</span>
+    </a>
+  </nav>
+
+  <!-- Customization Modal -->
+  <div class="overlay" id="modal-overlay"></div>
+  <div class="bottom-sheet" id="customization-modal">
+    <div class="sheet-header" style="border-bottom: none; padding-bottom: 0;">
+      <div style="flex-grow: 1;"></div>
+      <button class="btn-icon" id="close-modal" style="background: var(--color-surface-variant); color: var(--color-primary); width: 32px; height: 32px;">
+        <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+      </button>
+    </div>
+    
+    <div class="sheet-content" style="padding-top: 0;">
+      <!-- Hero Image & Desc -->
+      <div style="text-align: center; margin-bottom: var(--space-md);">
+        <img id="modal-img" src="" alt="Menu Image" style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+        <h3 id="modal-title" style="font-size: 24px; margin-bottom: 4px;">Nama Item</h3>
+        <p id="modal-desc" class="menu-desc" style="font-size: 14px; text-align: left; line-height: 1.5; color: var(--color-text-body);">Deskripsi item</p>
+      </div>
+
+      <form id="customization-form">
+        <input type="hidden" id="modal-item-id">
+        <input type="hidden" id="modal-cart-index">
+        <input type="hidden" id="modal-quantity-val" name="quantity" value="1">
+        
+        <!-- Quantity Selector -->
+        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; background: var(--color-surface-container); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-md); margin-bottom: var(--space-lg);">
+          <label class="form-label" style="margin-bottom: 0;">Jumlah</label>
+          <div style="display: flex; align-items: center; gap: var(--space-md);">
+            <button type="button" class="btn-icon" onclick="updateModalQuantity(-1)" style="width: 32px; height: 32px; background: var(--color-surface-lowest); color: var(--color-primary); border: 1px solid var(--color-surface-variant);">
+              <span class="material-symbols-outlined" style="font-size: 18px;">remove</span>
+            </button>
+            <span id="modal-quantity-display" style="font-weight: 600; font-size: 16px; width: 24px; text-align: center;">1</span>
+            <button type="button" class="btn-icon" onclick="updateModalQuantity(1)" style="width: 32px; height: 32px; background: var(--color-surface-lowest); color: var(--color-primary); border: 1px solid var(--color-surface-variant);">
+              <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tingkat Gula (Khusus Minuman)</label>
+          <div class="radio-group">
+            <label class="radio-item">
+              <span>Normal (100%)</span>
+              <input type="radio" name="sugar" value="Normal" checked>
+            </label>
+            <label class="radio-item">
+              <span>Less Sugar (50%)</span>
+              <input type="radio" name="sugar" value="Less">
+            </label>
+            <label class="radio-item">
+              <span>No Sugar (0%)</span>
+              <input type="radio" name="sugar" value="None">
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: var(--space-lg);">
+          <label class="form-label">Catatan Tambahan</label>
+          <textarea name="note" class="form-input" rows="3" placeholder="Contoh: Es dipisah, dsb."></textarea>
+        </div>
+      </form>
+    </div>
+
+    <div class="sheet-footer" style="display: flex; justify-content: space-between; align-items: center;">
+      <span id="modal-price" style="font-weight: 600; font-size: 18px;">Rp 0</span>
+      <button type="submit" form="customization-form" class="btn btn-primary" style="padding: 12px 24px;">Tambah</button>
+    </div>
+  </div>
+
+</body>
+</html>
