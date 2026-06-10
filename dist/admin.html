@@ -12,9 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" crossorigin src="/assets/admin-Do-GHMdK.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/store-Cz5k5dBT.js">
-  <link rel="stylesheet" crossorigin href="/assets/admin-BSx_lMDj.css">
+  <script type="module" crossorigin src="/assets/admin-DQDZNCG9.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/store-L3pErRld.js">
+  <link rel="stylesheet" crossorigin href="/assets/admin-uWN172HF.css">
+  <link rel="stylesheet" crossorigin href="/assets/design-system-DDZ7sej0.css">
 </head>
 
 <body class="admin-body">
@@ -277,6 +278,18 @@
               <img id="add-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
             </div>
 
+            <!-- Spesifikasi Kustom -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-weight: 600; font-size: 14px;">Spesifikasi Kustom</label>
+                <button type="button" id="btn-add-modifier-group-add" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Spesifikasi
+                </button>
+              </div>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Contoh: Pilihan Ukuran, Tingkat Gula, Topping, dll.</p>
+              <div id="modifier-groups-container-add" class="modifier-groups-container"></div>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
               <button type="button" id="btn-cancel-add-menu" class="btn btn-outline">Batal</button>
               <button type="submit" class="btn btn-primary" style="background-color: var(--color-success); color: white;">Simpan Menu</button>
@@ -321,6 +334,18 @@
               <label for="edit-menu-image" style="font-weight: 600; font-size: 14px;">Foto Menu (Kosongi jika tidak diubah)</label>
               <input type="file" id="edit-menu-image" accept="image/*" style="width: 100%; padding: 8px 0;">
               <img id="edit-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
+            </div>
+
+            <!-- Spesifikasi Kustom -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-weight: 600; font-size: 14px;">Spesifikasi Kustom</label>
+                <button type="button" id="btn-add-modifier-group-edit" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Spesifikasi
+                </button>
+              </div>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Contoh: Pilihan Ukuran, Tingkat Gula, Topping, dll.</p>
+              <div id="modifier-groups-container-edit" class="modifier-groups-container"></div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">

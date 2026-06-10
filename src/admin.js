@@ -115,23 +115,29 @@ function setupNavigation() {
   const navItems = document.querySelectorAll('.sidebar-item');
   const views = document.querySelectorAll('.admin-view');
 
-  navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      const targetId = item.getAttribute('href').substring(1);
-      
-      navItems.forEach(nav => nav.classList.remove('active'));
-      item.classList.add('active');
-
-      views.forEach(view => {
-        if (view.id === `view-${targetId}`) {
-          view.classList.add('active');
-        } else {
-          view.classList.remove('active');
-        }
-      });
+  function handleRoute() {
+    const hash = window.location.hash || '#dashboard';
+    const targetId = hash.substring(1);
+    
+    navItems.forEach(item => {
+      if (item.getAttribute('href') === hash) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
     });
-  });
+
+    views.forEach(view => {
+      if (view.id === `view-${targetId}`) {
+        view.classList.add('active');
+      } else {
+        view.classList.remove('active');
+      }
+    });
+  }
+
+  window.addEventListener('hashchange', handleRoute);
+  handleRoute();
 }
 
 function initGlobalFilters() {
@@ -949,14 +955,193 @@ function updateSortIcons(containerSelector, state) {
 }
 
 // =======================
+// MODIFIER GROUPS BUILDER HELPERS
+// =======================
+
+function createModifierOptionRowHTML(name = '', price = 0) {
+  return `
+    <div class="modifier-option-row">
+      <span class="material-symbols-outlined drag-handle">drag_indicator</span>
+      <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}">
+      <div class="price-input-wrapper">
+        <span class="price-prefix">+Rp</span>
+        <input type="number" class="filter-modern option-price-input" placeholder="0" required min="0" value="${price || ''}">
+      </div>
+      <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+  `;
+}
+
+function createModifierGroupCardHTML(groupId, group = { name: '', type: 'single', options: [] }) {
+  const optionsHtml = (group.options && group.options.length > 0)
+    ? group.options.map(opt => createModifierOptionRowHTML(opt.name, opt.priceAdd)).join('')
+    : createModifierOptionRowHTML('', 0);
+
+  return `
+    <div class="modifier-group-card animate-slide-up" id="${groupId}">
+      <div class="group-header">
+        <input type="text" class="filter-modern group-name-input" placeholder="Nama Spesifikasi (cth: Pilihan Ukuran)" required value="${group.name}">
+        <button type="button" class="btn-remove-group" title="Hapus Spesifikasi">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+      <div class="type-selector">
+        <label class="type-chip">
+          <input type="radio" name="type_${groupId}" value="single" ${group.type === 'single' ? 'checked' : ''}>
+          <span class="chip-label">Pilihan Tunggal</span>
+        </label>
+        <label class="type-chip">
+          <input type="radio" name="type_${groupId}" value="multi" ${group.type !== 'single' ? 'checked' : ''}>
+          <span class="chip-label">Pilihan Ganda</span>
+        </label>
+      </div>
+      <div class="modifier-options-container">
+        ${optionsHtml}
+      </div>
+      <button type="button" class="btn btn-outline btn-add-option-row">
+        <span class="material-symbols-outlined">add</span> Tambah Opsi
+      </button>
+    </div>
+  `;
+}
+
+function updateModifierEmptyState(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const cards = container.querySelectorAll('.modifier-group-card');
+  const existingEmpty = container.querySelector('.modifier-empty-state');
+  
+  if (cards.length === 0) {
+    if (!existingEmpty) {
+      container.innerHTML = `
+        <div class="modifier-empty-state">
+          <span class="material-symbols-outlined">tune</span>
+          <p>Belum ada spesifikasi kustom untuk menu ini.</p>
+          <span>Klik "+ Tambah Spesifikasi" di atas untuk membuat baru.</span>
+        </div>
+      `;
+    }
+  } else {
+    if (existingEmpty) {
+      existingEmpty.remove();
+    }
+  }
+}
+
+function addModifierGroupCard(containerId, group = { name: '', type: 'single', options: [] }) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  // Remove empty state if present
+  const emptyState = container.querySelector('.modifier-empty-state');
+  if (emptyState) {
+    container.innerHTML = '';
+  }
+  
+  const groupId = 'mod-group-' + Date.now() + Math.random().toString(36).substr(2, 9);
+  const cardHtml = createModifierGroupCardHTML(groupId, group);
+  container.insertAdjacentHTML('beforeend', cardHtml);
+}
+
+function setupModifierFormEvents(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.addEventListener('click', (e) => {
+    // 1. Tambah Opsi click
+    const btnAddOption = e.target.closest('.btn-add-option-row');
+    if (btnAddOption) {
+      e.preventDefault();
+      const card = btnAddOption.closest('.modifier-group-card');
+      const optionsContainer = card.querySelector('.modifier-options-container');
+      if (optionsContainer) {
+        const rowHtml = createModifierOptionRowHTML('', 0);
+        optionsContainer.insertAdjacentHTML('beforeend', rowHtml);
+      }
+      return;
+    }
+
+    // 2. Hapus Opsi click
+    const btnRemoveOption = e.target.closest('.btn-remove-option-row');
+    if (btnRemoveOption) {
+      e.preventDefault();
+      const row = btnRemoveOption.closest('.modifier-option-row');
+      if (row) {
+        row.remove();
+      }
+      return;
+    }
+
+    // 3. Hapus Grup click
+    const btnRemoveGroup = e.target.closest('.btn-remove-group');
+    if (btnRemoveGroup) {
+      e.preventDefault();
+      const card = btnRemoveGroup.closest('.modifier-group-card');
+      if (card) {
+        card.remove();
+        updateModifierEmptyState(containerId);
+      }
+      return;
+    }
+  });
+}
+
+function collectModifierGroups(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  
+  const modifierGroups = [];
+  const groupCards = container.querySelectorAll('.modifier-group-card');
+  
+  groupCards.forEach(card => {
+    const groupNameInput = card.querySelector('.group-name-input');
+    if (!groupNameInput) return;
+    
+    const groupName = groupNameInput.value.trim();
+    if (!groupName) return;
+    
+    // Get type
+    const typeInput = card.querySelector('input[type="radio"]:checked');
+    const type = typeInput ? typeInput.value : 'single';
+    
+    const options = [];
+    card.querySelectorAll('.modifier-option-row').forEach(row => {
+      const optNameInput = row.querySelector('.option-name-input');
+      const optPriceInput = row.querySelector('.option-price-input');
+      if (optNameInput && optPriceInput) {
+        const optName = optNameInput.value.trim();
+        const optPrice = parseInt(optPriceInput.value) || 0;
+        if (optName) {
+          options.push({ name: optName, priceAdd: optPrice });
+        }
+      }
+    });
+    
+    if (options.length > 0) {
+      modifierGroups.push({
+        name: groupName,
+        type: type,
+        required: type === 'single',
+        options: options
+      });
+    }
+  });
+  
+  return modifierGroups;
+}
+
+// =======================
 // EDIT MENU LOGIC
 // =======================
-let editBase64Image = null;
-
 window.openEditMenu = function(id) {
   const menus = Store.getMenu();
   const menu = menus.find(m => m.id === id);
   if (!menu) return;
+
+  renderCategoryOptions('category-list-options-edit');
 
   document.getElementById('edit-menu-id').value = menu.id;
   document.getElementById('edit-menu-name').value = menu.name;
@@ -971,41 +1156,16 @@ window.openEditMenu = function(id) {
   } else {
     preview.style.display = 'none';
   }
-  editBase64Image = null;
 
   const container = document.getElementById('modifier-groups-container-edit');
   if (container) {
     container.innerHTML = '';
-    if (menu.modifierGroups) {
+    if (menu.modifierGroups && menu.modifierGroups.length > 0) {
       menu.modifierGroups.forEach(group => {
-        const groupId = 'mod-group-edit-' + Date.now() + Math.random().toString(36).substr(2, 9);
-        const groupHtml = `
-          <div class="modifier-group-card" id="${groupId}" style="background: var(--color-surface-lowest); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
-            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <input type="text" class="filter-modern group-name-input" placeholder="Nama Grup (cth: Ukuran)" required style="flex-grow: 1; border: 1px solid var(--color-surface-variant); padding: 8px;" value="${group.name}">
-              <button type="button" class="btn-icon" onclick="this.closest('.modifier-group-card').remove()" style="color: #dc3545;" title="Hapus Grup">
-                <span class="material-symbols-outlined">delete</span>
-              </button>
-            </div>
-            <div class="modifier-options-container" style="display: flex; flex-direction: column; gap: 8px;">
-              ${group.options.map(opt => `
-                <div class="modifier-option-row" style="display: flex; gap: 8px; align-items: center;">
-                  <span class="material-symbols-outlined" style="color: var(--color-text-light); font-size: 16px;">drag_indicator</span>
-                  <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi" required style="flex-grow: 1; border: 1px solid var(--color-surface-variant); padding: 6px;" value="${opt.name}">
-                  <input type="number" class="filter-modern option-price-input" placeholder="Harga (Rp)" required style="width: 120px; border: 1px solid var(--color-surface-variant); padding: 6px;" min="0" value="${opt.priceAdd}">
-                  <button type="button" class="btn-icon" onclick="this.closest('.modifier-option-row').remove()" style="color: var(--color-text-light); padding: 4px;">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
-                  </button>
-                </div>
-              `).join('')}
-            </div>
-            <button type="button" class="btn btn-outline btn-add-option" style="margin-top: 12px; font-size: 12px; padding: 4px 12px; display: inline-flex; align-items: center; gap: 4px;">
-              <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Opsi
-            </button>
-          </div>
-        `;
-        container.insertAdjacentHTML('beforeend', groupHtml);
+        addModifierGroupCard('modifier-groups-container-edit', group);
       });
+    } else {
+      updateModifierEmptyState('modifier-groups-container-edit');
     }
   }
 
@@ -1017,90 +1177,6 @@ window.openEditMenu = function(id) {
     viewEdit.classList.add('active');
   }
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-  const editImageInput = document.getElementById('edit-menu-image');
-  if (editImageInput) {
-    editImageInput.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        editBase64Image = event.target.result;
-        const preview = document.getElementById('edit-menu-preview');
-        preview.src = editBase64Image;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  const btnCancelEdit = document.getElementById('btn-cancel-edit-menu');
-  if (btnCancelEdit) {
-    btnCancelEdit.addEventListener('click', () => {
-      const viewEdit = document.getElementById('view-edit-menu');
-      const viewMenu = document.getElementById('view-menu');
-      if (viewEdit) viewEdit.classList.remove('active');
-      if (viewMenu) viewMenu.classList.add('active');
-    });
-  }
-
-  const editForm = document.getElementById('edit-menu-form');
-  if (editForm) {
-    editForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const id = document.getElementById('edit-menu-id').value;
-      const modifierGroups = [];
-      
-      const container = document.getElementById('modifier-groups-container-edit');
-      if (container) {
-        const groupCards = container.querySelectorAll('.modifier-group-card');
-        groupCards.forEach(card => {
-          const groupName = card.querySelector('.group-name-input').value.trim();
-          if (groupName) {
-            const options = [];
-            card.querySelectorAll('.modifier-option-row').forEach(row => {
-              const optName = row.querySelector('.option-name-input').value.trim();
-              const optPrice = parseInt(row.querySelector('.option-price-input').value) || 0;
-              if (optName) {
-                options.push({ name: optName, priceAdd: optPrice });
-              }
-            });
-            if (options.length > 0) {
-              modifierGroups.push({
-                name: groupName,
-                type: 'single',
-                required: true,
-                options: options
-              });
-            }
-          }
-        });
-      }
-
-      const updatedMenu = {
-        name: document.getElementById('edit-menu-name').value.trim(),
-        category: document.getElementById('edit-menu-category').value.trim(),
-        price: parseInt(document.getElementById('edit-menu-price').value),
-        desc: document.getElementById('edit-menu-desc').value.trim(),
-        modifierGroups: modifierGroups
-      };
-
-      if (editBase64Image) {
-        updatedMenu.image = editBase64Image;
-      }
-
-      Store.updateMenu(id, updatedMenu);
-      alert('Perubahan menu berhasil disimpan!');
-      
-      const viewEdit = document.getElementById('view-edit-menu');
-      const viewMenu = document.getElementById('view-menu');
-      if (viewEdit) viewEdit.classList.remove('active');
-      if (viewMenu) viewMenu.classList.add('active');
-      if (typeof renderMenuTable === 'function') renderMenuTable();
-    });
-  }
-});
 
 // =======================
 // CATEGORY MANAGEMENT
@@ -1257,6 +1333,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnTambah) {
     btnTambah.addEventListener('click', () => {
       renderCategoryOptions('category-list-options');
+      
+      // Reset modifiers
+      const containerAdd = document.getElementById('modifier-groups-container-add');
+      if (containerAdd) {
+        containerAdd.innerHTML = '';
+        updateModifierEmptyState('modifier-groups-container-add');
+      }
+      
       document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-add-menu').classList.add('active');
     });
@@ -1348,19 +1432,43 @@ document.addEventListener('DOMContentLoaded', () => {
       preview.src = croppedImageBase64;
       preview.style.display = 'block';
     }
-    closeCrop();
+    document.getElementById('crop-image-modal').style.display = 'none';
+    if (currentCropper) {
+      currentCropper.destroy();
+      currentCropper = null;
+    }
   });
+
+  // Setup modifier form add/edit button clicks & delegation events
+  const btnAddGroupAdd = document.getElementById('btn-add-modifier-group-add');
+  if (btnAddGroupAdd) {
+    btnAddGroupAdd.addEventListener('click', () => {
+      addModifierGroupCard('modifier-groups-container-add');
+    });
+  }
+
+  const btnAddGroupEdit = document.getElementById('btn-add-modifier-group-edit');
+  if (btnAddGroupEdit) {
+    btnAddGroupEdit.addEventListener('click', () => {
+      addModifierGroupCard('modifier-groups-container-edit');
+    });
+  }
+
+  setupModifierFormEvents('modifier-groups-container-add');
+  setupModifierFormEvents('modifier-groups-container-edit');
 
   const addForm = document.getElementById('add-menu-form');
   if (addForm) {
     addForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const name = document.getElementById('add-menu-name').value;
-      const category = document.getElementById('add-menu-category').value;
+      const name = document.getElementById('add-menu-name').value.trim();
+      const category = document.getElementById('add-menu-category').value.trim();
       const price = parseInt(document.getElementById('add-menu-price').value);
-      const desc = document.getElementById('add-menu-desc').value;
+      const desc = document.getElementById('add-menu-desc').value.trim();
       const imgPreview = document.getElementById('add-menu-preview');
       const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
+
+      const modifierGroups = collectModifierGroups('modifier-groups-container-add');
 
       const id = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 10) + '_' + Date.now().toString().slice(-4);
 
@@ -1370,7 +1478,8 @@ document.addEventListener('DOMContentLoaded', () => {
         category: category,
         price: price,
         desc: desc,
-        img: img,
+        image: img,
+        modifierGroups: modifierGroups,
         available: true
       });
 
@@ -1383,6 +1492,13 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Menu berhasil ditambahkan!');
       addForm.reset();
       imgPreview.style.display = 'none';
+      
+      const containerAdd = document.getElementById('modifier-groups-container-add');
+      if (containerAdd) {
+        containerAdd.innerHTML = '';
+        updateModifierEmptyState('modifier-groups-container-add');
+      }
+
       document.getElementById('view-add-menu').classList.remove('active');
       document.getElementById('view-menu').classList.add('active');
       renderMenuTable();
@@ -1394,16 +1510,18 @@ document.addEventListener('DOMContentLoaded', () => {
     editForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const id = document.getElementById('edit-menu-id').value;
-      const name = document.getElementById('edit-menu-name').value;
-      const category = document.getElementById('edit-menu-category').value;
+      const name = document.getElementById('edit-menu-name').value.trim();
+      const category = document.getElementById('edit-menu-category').value.trim();
       const price = parseInt(document.getElementById('edit-menu-price').value);
-      const desc = document.getElementById('edit-menu-desc').value;
+      const desc = document.getElementById('edit-menu-desc').value.trim();
       
-      const updateData = { name, category, price, desc };
+      const modifierGroups = collectModifierGroups('modifier-groups-container-edit');
+      
+      const updateData = { name, category, price, desc, modifierGroups };
       
       const imgPreview = document.getElementById('edit-menu-preview');
       if (imgPreview.style.display === 'block') {
-        updateData.img = imgPreview.src;
+        updateData.image = imgPreview.src;
       }
 
       Store.updateMenu(id, updateData);
@@ -1432,30 +1550,6 @@ function renderCategoryOptions(datalistId) {
     datalist.appendChild(opt);
   });
 }
-
-window.openEditMenu = function(id) {
-  const menu = Store.getMenu().find(m => m.id === id);
-  if (!menu) return;
-  
-  renderCategoryOptions('category-list-options-edit');
-
-  document.getElementById('edit-menu-id').value = menu.id;
-  document.getElementById('edit-menu-name').value = menu.name;
-  document.getElementById('edit-menu-category').value = menu.category;
-  document.getElementById('edit-menu-price').value = menu.price;
-  document.getElementById('edit-menu-desc').value = menu.desc;
-  
-  if (menu.img) {
-    const preview = document.getElementById('edit-menu-preview');
-    preview.src = menu.img;
-    preview.style.display = 'block';
-  } else {
-    document.getElementById('edit-menu-preview').style.display = 'none';
-  }
-
-  document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-edit-menu').classList.add('active');
-};
 
 window.deleteMenu = function(id) {
   if (confirm('Yakin ingin menghapus menu ini secara permanen?')) {

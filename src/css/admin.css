@@ -486,3 +486,256 @@ input[type="month"].filter-modern:hover::-webkit-calendar-picker-indicator {
   color: var(--color-accent);
   font-weight: 600;
 }
+
+/* Modifier Group Builder */
+.modifier-groups-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.modifier-group-card {
+  background: var(--color-surface-lowest);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-surface-variant);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modifier-group-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-accent-hover);
+}
+
+.modifier-group-card .group-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.modifier-group-card .group-header input[type="text"] {
+  flex-grow: 1;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-surface-variant);
+  background-color: var(--color-surface);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modifier-group-card .group-header input[type="text"]:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(175, 140, 83, 0.15);
+}
+
+.modifier-group-card .btn-remove-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  color: var(--color-error);
+  background-color: rgba(220, 53, 69, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modifier-group-card .btn-remove-group:hover {
+  background-color: rgba(220, 53, 69, 0.15);
+  transform: scale(1.05);
+}
+
+.modifier-group-card .type-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.type-chip {
+  position: relative;
+  cursor: pointer;
+}
+
+.type-chip input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.type-chip .chip-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-surface-variant);
+  background-color: var(--color-surface);
+  color: var(--color-text-body);
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.type-chip input[type="radio"]:checked + .chip-label {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.type-chip:hover .chip-label:not(input:checked + .chip-label) {
+  border-color: var(--color-accent-hover);
+  background-color: var(--color-surface-container);
+}
+
+.modifier-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.modifier-option-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.modifier-option-row .drag-handle {
+  color: var(--color-text-muted);
+  cursor: grab;
+  user-select: none;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.modifier-option-row .option-name-input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-surface-variant);
+  background-color: var(--color-surface-lowest);
+  font-size: 14px;
+}
+
+.modifier-option-row .option-name-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.price-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 140px;
+}
+
+.price-prefix {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.price-input-wrapper .option-price-input {
+  width: 100%;
+  padding: 8px 12px 8px 42px; /* Extra left padding for prefix */
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-surface-variant);
+  background-color: var(--color-surface-lowest);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.price-input-wrapper .option-price-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.btn-remove-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-remove-option-row:hover {
+  color: var(--color-error);
+  background-color: rgba(220, 53, 69, 0.08);
+}
+
+.btn-add-option-row {
+  align-self: flex-start;
+  font-size: 13px;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-accent);
+  color: var(--color-accent);
+  background: transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-add-option-row:hover {
+  background-color: rgba(175, 140, 83, 0.05);
+  border-style: solid;
+}
+
+/* Empty State */
+.modifier-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  border: 2px dashed var(--color-surface-variant);
+  border-radius: var(--radius-lg);
+  background-color: rgba(0, 0, 0, 0.01);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.modifier-empty-state .material-symbols-outlined {
+  font-size: 36px;
+  margin-bottom: 8px;
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+.modifier-empty-state p {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-primary);
+  margin-bottom: 4px;
+}
+
+.modifier-empty-state span {
+  font-size: 12px;
+}
