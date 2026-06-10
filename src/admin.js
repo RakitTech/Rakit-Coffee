@@ -888,6 +888,7 @@ function renderMenuTable() {
       </td>
         <td>
           <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openEditMenu('${item.id}')">Edit</button>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-color: var(--color-error); color: var(--color-error);" onclick="deleteMenu('${item.id}')">Hapus</button>
         </td>
     `;
     tbody.appendChild(tr);
@@ -1234,13 +1235,195 @@ window.deleteCategory = function(index) {
   const menusUsingCat = menus.filter(m => m.category === catName);
   
   if (menusUsingCat.length > 0) {
-    alert(\`Tidak bisa menghapus kategori ini karena masih digunakan oleh \${menusUsingCat.length} menu. Pindahkan menu ke kategori lain terlebih dahulu.\`);
+    alert(`Tidak bisa menghapus kategori ini karena masih digunakan oleh ${menusUsingCat.length} menu. Pindahkan menu ke kategori lain terlebih dahulu.`);
     return;
   }
 
-  if (confirm(\`Hapus kategori "\${catName}"?\`)) {
+  if (confirm(`Hapus kategori "${catName}"?`)) {
     categories.splice(index, 1);
     Store.saveCategories(categories);
     renderCategoryManagerTable();
+  }
+};
+
+// ADD MENU & EDIT MENU LOGIC
+document.addEventListener('DOMContentLoaded', () => {
+  const btnTambah = document.getElementById('btn-tambah-menu');
+  const btnCancelAdd = document.getElementById('btn-cancel-add-menu');
+  const btnCancelEdit = document.getElementById('btn-cancel-edit-menu');
+  
+  if (btnTambah) {
+    btnTambah.addEventListener('click', () => {
+      // Setup datalist
+      renderCategoryOptions('category-list-options');
+      
+      document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-add-menu').classList.add('active');
+    });
+  }
+
+  if (btnCancelAdd) {
+    btnCancelAdd.addEventListener('click', () => {
+      document.getElementById('add-menu-form').reset();
+      document.getElementById('add-menu-preview').style.display = 'none';
+      document.getElementById('view-add-menu').classList.remove('active');
+      document.getElementById('view-menu').classList.add('active');
+    });
+  }
+
+  if (btnCancelEdit) {
+    btnCancelEdit.addEventListener('click', () => {
+      document.getElementById('edit-menu-form').reset();
+      document.getElementById('edit-menu-preview').style.display = 'none';
+      document.getElementById('view-edit-menu').classList.remove('active');
+      document.getElementById('view-menu').classList.add('active');
+    });
+  }
+
+  const addImageInput = document.getElementById('add-menu-image');
+  if (addImageInput) {
+    addImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('add-menu-preview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const editImageInput = document.getElementById('edit-menu-image');
+  if (editImageInput) {
+    editImageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('edit-menu-preview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  const addForm = document.getElementById('add-menu-form');
+  if (addForm) {
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('add-menu-name').value;
+      const category = document.getElementById('add-menu-category').value;
+      const price = parseInt(document.getElementById('add-menu-price').value);
+      const desc = document.getElementById('add-menu-desc').value;
+      const imgPreview = document.getElementById('add-menu-preview');
+      const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
+
+      const id = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 10) + '_' + Date.now().toString().slice(-4);
+
+      Store.addMenu({
+        id: id,
+        name: name,
+        category: category,
+        price: price,
+        desc: desc,
+        img: img,
+        available: true
+      });
+
+      // Save category if it's new
+      const categories = Store.getCategories();
+      if (!categories.includes(category)) {
+        categories.push(category);
+        Store.saveCategories(categories);
+      }
+
+      alert('Menu berhasil ditambahkan!');
+      addForm.reset();
+      imgPreview.style.display = 'none';
+      document.getElementById('view-add-menu').classList.remove('active');
+      document.getElementById('view-menu').classList.add('active');
+      renderMenuTable();
+    });
+  }
+
+  const editForm = document.getElementById('edit-menu-form');
+  if (editForm) {
+    editForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-menu-id').value;
+      const name = document.getElementById('edit-menu-name').value;
+      const category = document.getElementById('edit-menu-category').value;
+      const price = parseInt(document.getElementById('edit-menu-price').value);
+      const desc = document.getElementById('edit-menu-desc').value;
+      
+      const updateData = { name, category, price, desc };
+      
+      const fileInput = document.getElementById('edit-menu-image');
+      if (fileInput.files.length > 0) {
+        updateData.img = document.getElementById('edit-menu-preview').src;
+      }
+
+      Store.updateMenu(id, updateData);
+
+      // Save category if it's new
+      const categories = Store.getCategories();
+      if (!categories.includes(category)) {
+        categories.push(category);
+        Store.saveCategories(categories);
+      }
+
+      alert('Menu berhasil diupdate!');
+      document.getElementById('view-edit-menu').classList.remove('active');
+      document.getElementById('view-menu').classList.add('active');
+      renderMenuTable();
+    });
+  }
+});
+
+function renderCategoryOptions(datalistId) {
+  const datalist = document.getElementById(datalistId);
+  if (!datalist) return;
+  datalist.innerHTML = '';
+  Store.getCategories().forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    datalist.appendChild(opt);
+  });
+}
+
+window.openEditMenu = function(id) {
+  const menu = Store.getMenu().find(m => m.id === id);
+  if (!menu) return;
+  
+  renderCategoryOptions('category-list-options-edit');
+
+  document.getElementById('edit-menu-id').value = menu.id;
+  document.getElementById('edit-menu-name').value = menu.name;
+  document.getElementById('edit-menu-category').value = menu.category;
+  document.getElementById('edit-menu-price').value = menu.price;
+  document.getElementById('edit-menu-desc').value = menu.desc;
+  
+  if (menu.img) {
+    const preview = document.getElementById('edit-menu-preview');
+    preview.src = menu.img;
+    preview.style.display = 'block';
+  } else {
+    document.getElementById('edit-menu-preview').style.display = 'none';
+  }
+
+  document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-edit-menu').classList.add('active');
+};
+
+window.deleteMenu = function(id) {
+  if (confirm('Yakin ingin menghapus menu ini secara permanen?')) {
+    Store.deleteMenu(id);
+    alert('Menu berhasil dihapus!');
+    renderMenuTable();
   }
 };

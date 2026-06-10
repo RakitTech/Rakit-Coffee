@@ -54,6 +54,35 @@ export const Store = {
     }
   },
 
+  addMenu(data) {
+    const menus = this.getMenu();
+    menus.push(data);
+    localStorage.setItem('rakit_menu', JSON.stringify(menus));
+    window.dispatchEvent(new Event('storage'));
+  },
+
+  deleteMenu(id) {
+    let menus = this.getMenu();
+    menus = menus.filter(m => m.id !== id);
+    localStorage.setItem('rakit_menu', JSON.stringify(menus));
+    window.dispatchEvent(new Event('storage'));
+  },
+
+  getCategories() {
+    const cats = localStorage.getItem('rakit_categories');
+    if (cats) return JSON.parse(cats);
+    
+    const menus = this.getMenu();
+    const uniqueCats = [...new Set(menus.map(m => m.category))];
+    if (uniqueCats.length === 0) return ['SIGNATURE', 'KOPI', 'NON-COFFEE', 'MAKANAN'];
+    return uniqueCats;
+  },
+
+  saveCategories(categories) {
+    localStorage.setItem('rakit_categories', JSON.stringify(categories));
+    window.dispatchEvent(new Event('storage'));
+  },
+
   getOrders() {
     return JSON.parse(localStorage.getItem('rakit_orders') || '[]');
   },
