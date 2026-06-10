@@ -65,8 +65,8 @@
 .category-list {
   display: flex;
   overflow-x: auto;
-  padding: 11px var(--space-md); /* Menambah tinggi sekitar 5-6px dari sebelumnya (8px) */
-  gap: var(--space-sm);
+  padding: 16px var(--space-md);
+  gap: var(--space-md);
   align-items: center;
   list-style: none;
 }
@@ -78,22 +78,26 @@
   letter-spacing: 0.05em;
   background-color: var(--color-surface-lowest);
   color: var(--color-primary);
-  border: 1px solid var(--color-surface-variant);
+  border: none;
   white-space: nowrap;
-  padding: 6px 18px;
-  border-radius: var(--radius-full);
-  transition: all 0.2s;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
 }
 
 .category-tab:hover {
-  background-color: var(--color-surface-container);
+  background-color: var(--color-surface-lowest);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
 }
 
 .category-tab.active {
   background-color: var(--color-accent);
   color: var(--color-on-accent);
-  border-color: var(--color-accent);
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Menu Grid */
