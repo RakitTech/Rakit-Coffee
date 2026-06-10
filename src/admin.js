@@ -886,9 +886,9 @@ function renderMenuTable() {
           <span class="slider"></span>
         </label>
       </td>
-      <td>
-        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;">Edit</button>
-      </td>
+        <td>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openEditMenu('${item.id}')">Edit</button>
+        </td>
     `;
     tbody.appendChild(tr);
   });
@@ -944,3 +944,303 @@ function updateSortIcons(containerSelector, state) {
     }
   });
 }
+
+// =======================
+// EDIT MENU LOGIC
+// =======================
+let editBase64Image = null;
+
+window.openEditMenu = function(id) {
+  const menus = Store.getMenu();
+  const menu = menus.find(m => m.id === id);
+  if (!menu) return;
+
+  document.getElementById('edit-menu-id').value = menu.id;
+  document.getElementById('edit-menu-name').value = menu.name;
+  document.getElementById('edit-menu-category').value = menu.category;
+  document.getElementById('edit-menu-price').value = menu.price;
+  document.getElementById('edit-menu-desc').value = menu.desc;
+  
+  const preview = document.getElementById('edit-menu-preview');
+  if (menu.image) {
+    preview.src = menu.image;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+  editBase64Image = null;
+
+  const container = document.getElementById('modifier-groups-container-edit');
+  if (container) {
+    container.innerHTML = '';
+    if (menu.modifierGroups) {
+      menu.modifierGroups.forEach(group => {
+        const groupId = 'mod-group-edit-' + Date.now() + Math.random().toString(36).substr(2, 9);
+        const groupHtml = `
+          <div class="modifier-group-card" id="${groupId}" style="background: var(--color-surface-lowest); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input type="text" class="filter-modern group-name-input" placeholder="Nama Grup (cth: Ukuran)" required style="flex-grow: 1; border: 1px solid var(--color-surface-variant); padding: 8px;" value="${group.name}">
+              <button type="button" class="btn-icon" onclick="this.closest('.modifier-group-card').remove()" style="color: #dc3545;" title="Hapus Grup">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+            <div class="modifier-options-container" style="display: flex; flex-direction: column; gap: 8px;">
+              ${group.options.map(opt => `
+                <div class="modifier-option-row" style="display: flex; gap: 8px; align-items: center;">
+                  <span class="material-symbols-outlined" style="color: var(--color-text-light); font-size: 16px;">drag_indicator</span>
+                  <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi" required style="flex-grow: 1; border: 1px solid var(--color-surface-variant); padding: 6px;" value="${opt.name}">
+                  <input type="number" class="filter-modern option-price-input" placeholder="Harga (Rp)" required style="width: 120px; border: 1px solid var(--color-surface-variant); padding: 6px;" min="0" value="${opt.priceAdd}">
+                  <button type="button" class="btn-icon" onclick="this.closest('.modifier-option-row').remove()" style="color: var(--color-text-light); padding: 4px;">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">close</span>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn btn-outline btn-add-option" style="margin-top: 12px; font-size: 12px; padding: 4px 12px; display: inline-flex; align-items: center; gap: 4px;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Opsi
+            </button>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', groupHtml);
+      });
+    }
+  }
+
+  const viewMenu = document.getElementById('view-menu');
+  const viewEdit = document.getElementById('view-edit-menu');
+  
+  if (viewMenu && viewEdit) {
+    viewMenu.classList.remove('active');
+    viewEdit.classList.add('active');
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const editImageInput = document.getElementById('edit-menu-image');
+  if (editImageInput) {
+    editImageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        editBase64Image = event.target.result;
+        const preview = document.getElementById('edit-menu-preview');
+        preview.src = editBase64Image;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const btnCancelEdit = document.getElementById('btn-cancel-edit-menu');
+  if (btnCancelEdit) {
+    btnCancelEdit.addEventListener('click', () => {
+      const viewEdit = document.getElementById('view-edit-menu');
+      const viewMenu = document.getElementById('view-menu');
+      if (viewEdit) viewEdit.classList.remove('active');
+      if (viewMenu) viewMenu.classList.add('active');
+    });
+  }
+
+  const editForm = document.getElementById('edit-menu-form');
+  if (editForm) {
+    editForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-menu-id').value;
+      const modifierGroups = [];
+      
+      const container = document.getElementById('modifier-groups-container-edit');
+      if (container) {
+        const groupCards = container.querySelectorAll('.modifier-group-card');
+        groupCards.forEach(card => {
+          const groupName = card.querySelector('.group-name-input').value.trim();
+          if (groupName) {
+            const options = [];
+            card.querySelectorAll('.modifier-option-row').forEach(row => {
+              const optName = row.querySelector('.option-name-input').value.trim();
+              const optPrice = parseInt(row.querySelector('.option-price-input').value) || 0;
+              if (optName) {
+                options.push({ name: optName, priceAdd: optPrice });
+              }
+            });
+            if (options.length > 0) {
+              modifierGroups.push({
+                name: groupName,
+                type: 'single',
+                required: true,
+                options: options
+              });
+            }
+          }
+        });
+      }
+
+      const updatedMenu = {
+        name: document.getElementById('edit-menu-name').value.trim(),
+        category: document.getElementById('edit-menu-category').value.trim(),
+        price: parseInt(document.getElementById('edit-menu-price').value),
+        desc: document.getElementById('edit-menu-desc').value.trim(),
+        modifierGroups: modifierGroups
+      };
+
+      if (editBase64Image) {
+        updatedMenu.image = editBase64Image;
+      }
+
+      Store.updateMenu(id, updatedMenu);
+      alert('Perubahan menu berhasil disimpan!');
+      
+      const viewEdit = document.getElementById('view-edit-menu');
+      const viewMenu = document.getElementById('view-menu');
+      if (viewEdit) viewEdit.classList.remove('active');
+      if (viewMenu) viewMenu.classList.add('active');
+      if (typeof renderMenuTable === 'function') renderMenuTable();
+    });
+  }
+});
+
+// =======================
+// CATEGORY MANAGEMENT
+// =======================
+window.renderCategoryOptions = function() {
+  const datalist = document.getElementById('category-list-options');
+  if (!datalist) return;
+  const categories = Store.getCategories();
+  datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
+};
+
+window.setupCategoryManager = function() {
+  const btnKelola = document.getElementById('btn-kelola-kategori');
+  const btnBack = document.getElementById('btn-back-kategori');
+  const viewManage = document.getElementById('view-manage-categories');
+  const viewMenu = document.getElementById('view-menu');
+
+  if (btnKelola) {
+    btnKelola.addEventListener('click', () => {
+      if(viewMenu) viewMenu.classList.remove('active');
+      if(viewManage) viewManage.classList.add('active');
+      renderCategoryManagerTable();
+    });
+  }
+
+  if (btnBack) {
+    btnBack.addEventListener('click', () => {
+      if(viewManage) viewManage.classList.remove('active');
+      if(viewMenu) viewMenu.classList.add('active');
+    });
+  }
+
+  const btnAdd = document.getElementById('btn-add-category');
+  if (btnAdd) {
+    btnAdd.addEventListener('click', () => {
+      const input = document.getElementById('new-category-name');
+      const name = input.value.trim();
+      if (name) {
+        const categories = Store.getCategories();
+        if (!categories.includes(name)) {
+          categories.push(name);
+          Store.saveCategories(categories);
+          input.value = '';
+          renderCategoryManagerTable();
+        } else {
+          alert('Kategori sudah ada!');
+        }
+      }
+    });
+  }
+};
+
+window.renderCategoryManagerTable = function() {
+  const tbody = document.getElementById('category-table-body');
+  if (!tbody) return;
+  const categories = Store.getCategories();
+  
+  if (categories.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Belum ada kategori.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = categories.map((cat, index) => `
+    <tr>
+      <td style="text-align: center;">${index + 1}</td>
+      <td>
+        <input type="text" class="filter-modern" value="${cat}" onchange="updateCategoryName(${index}, this.value)" style="width: 100%; border: 1px solid transparent; padding: 4px;">
+      </td>
+      <td style="text-align: center; display: flex; gap: 4px; justify-content: center;">
+        <button class="btn-icon" onclick="moveCategory(${index}, -1)" ${index === 0 ? 'disabled' : ''} title="Geser ke Atas">
+          <span class="material-symbols-outlined" style="font-size: 18px;">arrow_upward</span>
+        </button>
+        <button class="btn-icon" onclick="moveCategory(${index}, 1)" ${index === categories.length - 1 ? 'disabled' : ''} title="Geser ke Bawah">
+          <span class="material-symbols-outlined" style="font-size: 18px;">arrow_downward</span>
+        </button>
+        <button class="btn-icon" onclick="deleteCategory(${index})" title="Hapus Kategori" style="color: #dc3545;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+};
+
+window.updateCategoryName = function(index, newName) {
+  newName = newName.trim();
+  if (!newName) return;
+  const categories = Store.getCategories();
+  const oldName = categories[index];
+  
+  if (newName !== oldName && categories.includes(newName)) {
+    alert('Nama kategori sudah digunakan!');
+    renderCategoryManagerTable(); // revert
+    return;
+  }
+
+  categories[index] = newName;
+  Store.saveCategories(categories);
+  
+  // Update all menus that used the old category name
+  const menus = Store.getMenu();
+  let menuUpdated = false;
+  menus.forEach(m => {
+    if (m.category === oldName) {
+      Store.updateMenu(m.id, { category: newName });
+      menuUpdated = true;
+    }
+  });
+
+  if (!menuUpdated) {
+    // Manually render table if no menu was updated (since updateMenu fires storage event)
+    renderCategoryManagerTable();
+  }
+};
+
+window.moveCategory = function(index, direction) {
+  const categories = Store.getCategories();
+  if (index + direction < 0 || index + direction >= categories.length) return;
+
+  // Swap elements
+  const temp = categories[index];
+  categories[index] = categories[index + direction];
+  categories[index + direction] = temp;
+
+  Store.saveCategories(categories);
+  renderCategoryManagerTable();
+};
+
+window.deleteCategory = function(index) {
+  const categories = Store.getCategories();
+  const catName = categories[index];
+  
+  // Check if any menus are using this category
+  const menus = Store.getMenu();
+  const menusUsingCat = menus.filter(m => m.category === catName);
+  
+  if (menusUsingCat.length > 0) {
+    alert(\`Tidak bisa menghapus kategori ini karena masih digunakan oleh \${menusUsingCat.length} menu. Pindahkan menu ke kategori lain terlebih dahulu.\`);
+    return;
+  }
+
+  if (confirm(\`Hapus kategori "\${catName}"?\`)) {
+    categories.splice(index, 1);
+    Store.saveCategories(categories);
+    renderCategoryManagerTable();
+  }
+};

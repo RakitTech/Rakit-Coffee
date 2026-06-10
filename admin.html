@@ -238,6 +238,59 @@
           </div>
         </div>
       </div>
+    <!-- EDIT MENU VIEW -->
+    <section id="view-edit-menu" class="admin-view">
+      <header class="admin-header">
+        <h2 style="color: white;">Edit Menu</h2>
+      </header>
+      <div class="admin-content">
+        <div class="section-block" style="max-width: 600px; margin: 0 auto;">
+          <form id="edit-menu-form" style="display: flex; flex-direction: column; gap: 16px;">
+            <input type="hidden" id="edit-menu-id">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label for="edit-menu-name" style="font-weight: 600; font-size: 14px;">Nama Menu</label>
+              <input type="text" id="edit-menu-name" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label for="edit-menu-category" style="font-weight: 600; font-size: 14px;">Kategori</label>
+              <input type="text" id="edit-menu-category" list="category-list-options" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);" placeholder="Pilih atau ketik kategori baru">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label for="edit-menu-price" style="font-weight: 600; font-size: 14px;">Harga Dasar (Rp)</label>
+              <input type="number" id="edit-menu-price" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);" min="0">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label for="edit-menu-desc" style="font-weight: 600; font-size: 14px;">Deskripsi Singkat</label>
+              <textarea id="edit-menu-desc" rows="3" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md); font-family: var(--font-body); resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label for="edit-menu-image" style="font-weight: 600; font-size: 14px;">Foto Menu (Kosongi jika tidak diubah)</label>
+              <input type="file" id="edit-menu-image" accept="image/*" style="width: 100%; padding: 8px 0;">
+              <img id="edit-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
+            </div>
+
+            <!-- Dynamic Modifier Groups -->
+            <div style="border-top: 1px dashed var(--color-surface-variant); padding-top: 16px; margin-top: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <label style="font-weight: 600; font-size: 14px; margin: 0;">Spesifikasi Tambahan (Opsional)</label>
+                <button type="button" id="btn-add-modifier-group-edit" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px;">+ Tambah Grup</button>
+              </div>
+              <div id="modifier-groups-container-edit" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Dynamically populated by JS -->
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
+              <button type="button" id="btn-cancel-edit-menu" class="btn btn-outline">Batal</button>
+              <button type="submit" class="btn btn-primary" style="background-color: var(--color-success); color: white;">Simpan Perubahan</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </section>
 
   </main>
