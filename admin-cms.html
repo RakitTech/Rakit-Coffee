@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin CMS - Rakit Coffee</title>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/admin.css">
+</head>
+<body class="admin-body">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h1 style="color: var(--color-accent); font-size: 24px;">Rakit<span style="color: var(--color-text-body);">Admin</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/admin.html" class="sidebar-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard Penjualan
+      </a>
+      <a href="/admin-analytics.html" class="sidebar-item">
+        <span class="material-symbols-outlined">analytics</span>
+        Dashboard Menu
+      </a>
+      <a href="/admin-manage.html" class="sidebar-item">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        Kelola Menu
+      </a>
+      <a href="/admin-cms.html" class="sidebar-item active" id="nav-cms">
+        <span class="material-symbols-outlined">palette</span>
+        Tampilan Pelanggan
+      </a>
+      <a href="#" class="sidebar-item" id="btn-logout" style="margin-top: auto; color: #dc3545;">
+        <span class="material-symbols-outlined">logout</span>
+        Keluar
+      </a>
+    </nav>
+  </aside>
+
+  <main class="admin-main">
+    <section class="admin-view active">
+      <header class="admin-header">
+        <h2 style="color: white;">Pengaturan Tampilan Pelanggan</h2>
+      </header>
+
+      <div class="admin-content">
+        <div class="section-block" style="max-width: 700px; margin: 0 auto;">
+          <form id="cms-form" style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- Tema Warna -->
+            <div style="border: 1px solid var(--color-surface-variant); padding: 20px; border-radius: var(--radius-md);">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-accent);">format_color_fill</span> Tema Warna
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="cms-theme" style="font-weight: 600; font-size: 14px;">Kombinasi Warna (Aksen)</label>
+                <select id="cms-theme" class="filter-modern" style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+                  <option value="#AF8C53">Classic Gold (Bawaan)</option>
+                  <option value="#769C8A">Sage Green</option>
+                  <option value="#4A7C82">Ocean Blue</option>
+                  <option value="#A86E53">Warm Terracotta</option>
+                  <option value="#D4AF37">Royal Yellow</option>
+                  <option value="#805b36">Coffee Brown</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tipografi -->
+            <div style="border: 1px solid var(--color-surface-variant); padding: 20px; border-radius: var(--radius-md);">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-accent);">text_fields</span> Tipografi & Font
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label for="cms-font" style="font-weight: 600; font-size: 14px;">Kombinasi Font (Judul)</label>
+                <select id="cms-font" class="filter-modern" style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+                  <option value="'Playfair Display', serif">Playfair Display (Bawaan)</option>
+                  <option value="'Lora', serif">Lora (Elegan)</option>
+                  <option value="'Montserrat', sans-serif">Montserrat (Modern)</option>
+                  <option value="'Poppins', sans-serif">Poppins (Ramah)</option>
+                  <option value="'Oswald', sans-serif">Oswald (Tegas)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Hero Banner -->
+            <div style="border: 1px solid var(--color-surface-variant); padding: 20px; border-radius: var(--radius-md);">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-accent);">view_carousel</span> Gambar & Teks Sambutan (Hero)
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-hero-title" style="font-weight: 600; font-size: 14px;">Teks Headline (Judul)</label>
+                  <input type="text" id="cms-hero-title" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-hero-subtitle" style="font-weight: 600; font-size: 14px;">Sub-teks (Deskripsi)</label>
+                  <textarea id="cms-hero-subtitle" rows="3" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md); font-family: var(--font-body); resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-hero-image" style="font-weight: 600; font-size: 14px;">Gambar Banner Utama (Rasio 16:9 atau lebih lebar disarankan)</label>
+                  <input type="file" id="cms-hero-image" accept="image/*" style="width: 100%; padding: 8px 0;">
+                  <img id="cms-hero-preview" src="" style="display: none; width: 100%; max-height: 250px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
+                </div>
+
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+              <button type="submit" class="btn btn-primary" style="background-color: var(--color-success); color: white; padding: 12px 24px; font-size: 16px;">
+                <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 4px;">save</span> Simpan Tampilan
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Crop Image -->
+  <div class="modal-overlay" id="crop-image-modal" style="display: none;">
+    <div class="modal-container" style="max-width: 800px; width: 90%;">
+      <div class="modal-header">
+        <h3>Sesuaikan Gambar Banner</h3>
+        <button class="btn-icon" id="close-crop-modal"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="modal-body" style="text-align: center;">
+        <div style="max-height: 50vh; overflow: hidden; margin-bottom: 16px;">
+          <img id="crop-image-target" src="" style="max-width: 100%; display: block;">
+        </div>
+        <p style="font-size: 13px; color: var(--color-text-muted);">Geser dan sesuaikan gambar untuk banner utama.</p>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn btn-outline" id="btn-cancel-crop">Batal</button>
+        <button class="btn btn-primary" id="btn-save-crop">Terapkan Crop</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/admin-cms.js"></script>
+</body>
+</html>

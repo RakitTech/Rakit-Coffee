@@ -9,7 +9,8 @@
   align-items: center;
   padding: 0 var(--space-md);
   height: var(--nav-height);
-  background: linear-gradient(135deg, #735932 0%, #ac8d59 30%, #c8ae6a 50%, #d4ad6f 70%, #8E6E3D 100%) !important;
+  background-color: var(--color-accent) !important;
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.15) 100%) !important;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -20,10 +21,11 @@
 }
 
 .table-badge {
-  background-color: rgb(49, 40, 29);
+  background-color: rgba(0, 0, 0, 0.4);
   padding: 4px 12px;
   border-radius: var(--radius-sm);
-  color: rgb(226, 220, 211);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Page Layout */
@@ -421,7 +423,7 @@
 
 .radio-item:has(input:checked), .checkbox-item:has(input:checked) {
   border-color: var(--color-accent);
-  background-color: #fdfaf5;
+  background-color: var(--color-accent-light);
 }
 
 .radio-item input, .checkbox-item input {
@@ -542,7 +544,7 @@
 .step.active .step-icon {
   background-color: var(--color-accent);
   color: var(--color-on-accent);
-  box-shadow: 0 0 0 4px rgba(175, 140, 83, 0.2);
+  box-shadow: 0 0 0 4px var(--color-surface-variant);
 }
 
 .step.completed .step-icon {
@@ -567,7 +569,7 @@
 
 .payment-option:has(input[type="radio"]:checked) {
   border-color: var(--color-accent);
-  background-color: #fdfaf5;
+  background-color: var(--color-accent-light);
 }
 
 .payment-option:has(input[type="radio"]:checked) .payment-icon {

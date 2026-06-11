@@ -39,6 +39,18 @@ if (!localStorage.getItem('rakit_orders') || localStorage.getItem('clear_old_ord
   localStorage.setItem('clear_old_orders_2', 'true');
 }
 
+const initialCmsSettings = {
+  themeColor: '#AF8C53',
+  fontFamily: "'Inter', sans-serif",
+  heroTitle: 'Selamat Datang di Rakit Coffee',
+  heroSubtitle: 'Nikmati racikan kopi premium dan hidangan lezat yang disiapkan khusus untuk menemani momen berharga Anda hari ini.',
+  heroImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAkraCqif2SxQdRwm0wKEz-FPHEhuYSr8Ko3_4FEPVLtungLI4aI0N2jmDKH9059vVGTBs09z-9fzaScFzSdQDsnKsOC6euhHRNeaIAlGovJZP2g2xD18ZvX7TsFD34tkMlMVL3LUoxlvRHwrv06fVIJmYnAEms23eZuoiyPnPFVrHUZTjE7KYnZpZr8VukCVoZTkQMdXyIsMK0X36VNerL8PCR5FCkjyqPU2lGiDg9jW42X2-w24ISH8RfpyVt2znhJu-sj2esU-U'
+};
+
+if (!localStorage.getItem('rakit_cms')) {
+  localStorage.setItem('rakit_cms', JSON.stringify(initialCmsSettings));
+}
+
 export const Store = {
   // Auth methods
   async login(username, password) {
@@ -246,5 +258,21 @@ export const Store = {
       originalSetItem.apply(this, arguments);
       window.dispatchEvent(event);
     };
+  },
+
+  // CMS Methods
+  async getCmsSettings() {
+    return new Promise(resolve => {
+      const settings = JSON.parse(localStorage.getItem('rakit_cms')) || initialCmsSettings;
+      resolve(settings);
+    });
+  },
+
+  async saveCmsSettings(settings) {
+    return new Promise(resolve => {
+      localStorage.setItem('rakit_cms', JSON.stringify(settings));
+      window.dispatchEvent(new Event('storage'));
+      resolve(true);
+    });
   }
 };

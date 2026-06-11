@@ -11,7 +11,8 @@
   --color-surface-lowest: #ffffff; /* White card bg */
   
   --color-accent: #AF8C53; /* Gold / Bronze */
-  --color-accent-hover: #c4a165;
+  --color-accent-hover: color-mix(in srgb, var(--color-accent), white 15%);
+  --color-accent-active: color-mix(in srgb, var(--color-accent), black 10%);
   --color-on-accent: #ffffff;
   
   --color-text-body: #444748;
@@ -110,6 +111,12 @@ button {
   background-color: var(--color-accent-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-primary:active {
+  background-color: var(--color-accent-active);
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-outline {

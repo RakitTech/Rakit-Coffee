@@ -26,7 +26,37 @@ function hideLoading() {
   if (loader) loader.style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function applyCmsSettings() {
+  const settings = await Store.getCmsSettings();
+  
+  // Apply CSS Variables
+  document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+  document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '15'); // 15% opacity hex
+  document.documentElement.style.setProperty('--shadow-accent', `0 8px 30px ${settings.themeColor}4D`); // 30% opacity hex
+  document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+  
+  // Create dynamic Google Fonts link if font isn't standard
+  if (settings.fontFamily.includes('Lora') || settings.fontFamily.includes('Montserrat') || 
+      settings.fontFamily.includes('Poppins') || settings.fontFamily.includes('Oswald')) {
+    const fontName = settings.fontFamily.split(',')[0].replace(/'/g, '').trim();
+    const link = document.createElement('link');
+    link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+
+  // Apply Hero Elements
+  const heroImg = document.getElementById('cms-hero-img');
+  const heroTitle = document.getElementById('cms-hero-title');
+  const heroSubtitle = document.getElementById('cms-hero-subtitle');
+
+  if (heroImg && settings.heroImage) heroImg.src = settings.heroImage;
+  if (heroTitle && settings.heroTitle) heroTitle.textContent = settings.heroTitle;
+  if (heroSubtitle && settings.heroSubtitle) heroSubtitle.textContent = settings.heroSubtitle;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await applyCmsSettings();
   renderMenu();
   setupNavigation();
   setupModal();
