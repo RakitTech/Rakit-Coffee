@@ -6,7 +6,6 @@ let myOrderIds = [];
 document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
   setupNavigation();
-  setupCategoryFilter();
   setupModal();
   updateCartUI();
   updateTrackerStatus();
@@ -70,14 +69,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function renderMenu() {
   const menuContainer = document.getElementById('menu-container');
+  const categoryList = document.querySelector('.category-list');
   const menus = Store.getMenu();
   
   menuContainer.innerHTML = '';
 
-  const categories = [...new Set(menus.map(m => m.category))]; // Dynamic categories
+  // Get ordered categories from Store, filter to only those that have items in menu
+  const storeCategories = Store.getCategories();
+  const categories = storeCategories.filter(cat => menus.some(m => m.category.toUpperCase() === cat.toUpperCase()));
+
+  // Render Category Tabs dynamically
+  if (categoryList) {
+    const activeTabEl = categoryList.querySelector('.category-tab.active');
+    const activeCatName = activeTabEl ? activeTabEl.textContent.trim() : null;
+    
+    let indicator = document.getElementById('category-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'tab-indicator';
+      indicator.id = 'category-indicator';
+    }
+    
+    categoryList.innerHTML = '';
+    
+    categories.forEach((cat, idx) => {
+      const li = document.createElement('li');
+      li.className = 'category-tab';
+      const isCurrentActive = activeCatName ? (cat.toUpperCase() === activeCatName.toUpperCase()) : (idx === 0);
+      if (isCurrentActive) li.classList.add('active');
+      li.textContent = cat;
+      categoryList.appendChild(li);
+    });
+    
+    categoryList.appendChild(indicator);
+    setupCategoryFilter();
+  }
 
   categories.forEach(category => {
-    const categoryItems = menus.filter(m => m.category === category);
+    const categoryItems = menus.filter(m => m.category.toUpperCase() === category.toUpperCase());
     
     if (categoryItems.length > 0) {
       const section = document.createElement('div');
