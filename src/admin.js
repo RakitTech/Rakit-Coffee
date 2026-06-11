@@ -29,6 +29,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupSorting();
   initCustomSelects();
+  initCustomAutocompletes();
+  setupCategoryManager();
+});
+
+function formatRupiahStr(num) {
+  if (!num) return '';
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'add-menu-price' || e.target.id === 'edit-menu-price' || e.target.classList.contains('option-price-input')) {
+    let val = e.target.value.replace(/\D/g, ''); // remove non-digits
+    if (val) {
+      val = parseInt(val, 10).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+    e.target.value = val;
+  }
 });
 
 function initCustomSelects() {
@@ -110,6 +127,181 @@ function initCustomSelects() {
     });
   });
 }
+
+function initCustomAutocompletes() {
+  const configs = [
+    { inputId: 'add-menu-category' },
+    { inputId: 'edit-menu-category' }
+  ];
+
+  configs.forEach(({ inputId }) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    // Remove list attribute to bypass default browser datalist rendering
+    input.removeAttribute('list');
+    input.setAttribute('autocomplete', 'off');
+
+    // Create wrapper
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-autocomplete-wrapper';
+    if (input.style.width) wrapper.style.width = input.style.width;
+    wrapper.style.display = 'block';
+
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+
+    // Create chevron
+    const chevron = document.createElement('span');
+    chevron.className = 'material-symbols-outlined custom-autocomplete-chevron';
+    chevron.textContent = 'expand_more';
+    wrapper.appendChild(chevron);
+
+    // Create dropdown container
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-autocomplete-dropdown';
+    wrapper.appendChild(dropdown);
+
+    let activeIndex = -1;
+
+    function renderOptions(filterText = '') {
+      dropdown.innerHTML = '';
+      activeIndex = -1;
+
+      const categories = Store.getCategories();
+      const normalizedFilter = filterText.toLowerCase().trim();
+
+      const filtered = categories.filter(cat => 
+        cat.toLowerCase().includes(normalizedFilter)
+      );
+
+      if (filtered.length > 0) {
+        filtered.forEach((cat) => {
+          const opt = document.createElement('div');
+          opt.className = 'custom-autocomplete-option';
+          if (input.value.trim() === cat) opt.classList.add('selected');
+          opt.textContent = cat;
+
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            input.value = cat;
+            wrapper.classList.remove('open');
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+
+          dropdown.appendChild(opt);
+        });
+      } else {
+        if (normalizedFilter !== '') {
+          // Option to create a new category
+          const opt = document.createElement('div');
+          opt.className = 'custom-autocomplete-option create-new';
+          opt.textContent = `Buat kategori baru: "${filterText}"`;
+          opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            input.value = filterText;
+            wrapper.classList.remove('open');
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+          dropdown.appendChild(opt);
+        } else {
+          // Empty state when no categories exist yet and search is empty
+          const opt = document.createElement('div');
+          opt.className = 'custom-autocomplete-option';
+          opt.style.color = 'var(--color-text-muted)';
+          opt.style.fontStyle = 'italic';
+          opt.style.cursor = 'default';
+          opt.textContent = 'Belum ada kategori. Silakan ketik baru.';
+          dropdown.appendChild(opt);
+        }
+      }
+    }
+
+    function updateActiveOption(options) {
+      options.forEach((opt, idx) => {
+        if (idx === activeIndex) {
+          opt.classList.add('active');
+          opt.scrollIntoView({ block: 'nearest' });
+        } else {
+          opt.classList.remove('active');
+        }
+      });
+    }
+
+    // Input events
+    input.addEventListener('focus', () => {
+      // Close other open autocompletes
+      document.querySelectorAll('.custom-autocomplete-wrapper.open').forEach(w => {
+        if (w !== wrapper) w.classList.remove('open');
+      });
+      renderOptions(input.value);
+      wrapper.classList.add('open');
+    });
+
+    input.addEventListener('input', (e) => {
+      renderOptions(e.target.value);
+      wrapper.classList.add('open');
+    });
+
+    // Keyboard events
+    input.addEventListener('keydown', (e) => {
+      const options = dropdown.querySelectorAll('.custom-autocomplete-option');
+      if (!wrapper.classList.contains('open')) {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          wrapper.classList.add('open');
+          renderOptions(input.value);
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (options.length > 0) {
+          activeIndex = (activeIndex + 1) % options.length;
+          updateActiveOption(options);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (options.length > 0) {
+          activeIndex = (activeIndex - 1 + options.length) % options.length;
+          updateActiveOption(options);
+        }
+      } else if (e.key === 'Enter') {
+        if (activeIndex >= 0 && activeIndex < options.length) {
+          e.preventDefault();
+          options[activeIndex].click();
+        } else {
+          wrapper.classList.remove('open');
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        wrapper.classList.remove('open');
+        input.blur();
+      }
+    });
+
+    // Toggle on chevron click
+    chevron.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (wrapper.classList.contains('open')) {
+        wrapper.classList.remove('open');
+      } else {
+        input.focus();
+      }
+    });
+
+    // Document click to close
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target)) {
+        wrapper.classList.remove('open');
+      }
+    });
+  });
+}
+
 
 function setupNavigation() {
   const navItems = document.querySelectorAll('.sidebar-item');
@@ -965,7 +1157,7 @@ function createModifierOptionRowHTML(name = '', price = 0) {
       <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}">
       <div class="price-input-wrapper">
         <span class="price-prefix">+Rp</span>
-        <input type="number" class="filter-modern option-price-input" placeholder="0" required min="0" value="${price || ''}">
+        <input type="text" inputmode="numeric" class="filter-modern option-price-input" placeholder="0" required value="${formatRupiahStr(price)}">
       </div>
       <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
         <span class="material-symbols-outlined">close</span>
@@ -1113,7 +1305,7 @@ function collectModifierGroups(containerId) {
       const optPriceInput = row.querySelector('.option-price-input');
       if (optNameInput && optPriceInput) {
         const optName = optNameInput.value.trim();
-        const optPrice = parseInt(optPriceInput.value) || 0;
+        const optPrice = parseInt(optPriceInput.value.replace(/\./g, '')) || 0;
         if (optName) {
           options.push({ name: optName, priceAdd: optPrice });
         }
@@ -1146,7 +1338,7 @@ window.openEditMenu = function(id) {
   document.getElementById('edit-menu-id').value = menu.id;
   document.getElementById('edit-menu-name').value = menu.name;
   document.getElementById('edit-menu-category').value = menu.category;
-  document.getElementById('edit-menu-price').value = menu.price;
+  document.getElementById('edit-menu-price').value = formatRupiahStr(menu.price);
   document.getElementById('edit-menu-desc').value = menu.desc;
   
   const preview = document.getElementById('edit-menu-preview');
@@ -1463,7 +1655,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const name = document.getElementById('add-menu-name').value.trim();
       const category = document.getElementById('add-menu-category').value.trim();
-      const price = parseInt(document.getElementById('add-menu-price').value);
+      const priceStr = document.getElementById('add-menu-price').value;
+      const price = parseInt(priceStr.replace(/\./g, '')) || 0;
       const desc = document.getElementById('add-menu-desc').value.trim();
       const imgPreview = document.getElementById('add-menu-preview');
       const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
@@ -1512,7 +1705,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = document.getElementById('edit-menu-id').value;
       const name = document.getElementById('edit-menu-name').value.trim();
       const category = document.getElementById('edit-menu-category').value.trim();
-      const price = parseInt(document.getElementById('edit-menu-price').value);
+      const priceStr = document.getElementById('edit-menu-price').value;
+      const price = parseInt(priceStr.replace(/\./g, '')) || 0;
       const desc = document.getElementById('edit-menu-desc').value.trim();
       
       const modifierGroups = collectModifierGroups('modifier-groups-container-edit');

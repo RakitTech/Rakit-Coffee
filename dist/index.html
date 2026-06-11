@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rakit Coffee - Menu</title>
-  <script type="module" crossorigin src="/assets/main-B6t-OyZw.js"></script>
+  <script type="module" crossorigin src="/assets/main-CAbw7FGB.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/store-L3pErRld.js">
-  <link rel="stylesheet" crossorigin href="/assets/main-DPiEn0B6.css">
+  <link rel="stylesheet" crossorigin href="/assets/main-BaT9Qdwz.css">
   <link rel="stylesheet" crossorigin href="/assets/design-system-DDZ7sej0.css">
 </head>
 <body>
@@ -27,14 +27,15 @@
       <div class="hero-section">
         <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkraCqif2SxQdRwm0wKEz-FPHEhuYSr8Ko3_4FEPVLtungLI4aI0N2jmDKH9059vVGTBs09z-9fzaScFzSdQDsnKsOC6euhHRNeaIAlGovJZP2g2xD18ZvX7TsFD34tkMlMVL3LUoxlvRHwrv06fVIJmYnAEms23eZuoiyPnPFVrHUZTjE7KYnZpZr8VukCVoZTkQMdXyIsMK0X36VNerL8PCR5FCkjyqPU2lGiDg9jW42X2-w24ISH8RfpyVt2znhJu-sj2esU-U" alt="Rakit Coffee">
         <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h2 style="font-family: var(--font-heading); font-size: 26px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.02em; color: #ffeec5;">Selamat Datang di Rakit Coffee</h2>
+          <p style="font-family: var(--font-body); font-size: 13px; max-width: 90%; line-height: 1.6; opacity: 0.9; margin: 0; text-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 1px 4px rgba(0, 0, 0, 0.4);">Nikmati racikan kopi premium dan hidangan lezat yang disiapkan khusus untuk menemani momen berharga Anda hari ini.</p>
+        </div>
       </div>
 
       <nav class="category-nav">
         <ul class="category-list">
-          <li class="category-tab active">SIGNATURE</li>
-          <li class="category-tab">KOPI</li>
-          <li class="category-tab">MAKANAN</li>
-          <li class="category-tab">CAMILAN</li>
+          <!-- Dynamically populated via customer.js -->
           <div class="tab-indicator" id="category-indicator"></div>
         </ul>
       </nav>
@@ -59,9 +60,30 @@
             <span id="cart-page-total" style="font-weight: 600; font-size: 18px; color: var(--color-accent);">Rp 0</span>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="customer-name">Nama Pelanggan <span style="color: var(--color-error);">*</span></label>
-            <input type="text" id="customer-name" class="form-input" placeholder="Masukkan nama Anda" required>
+          <div class="form-group" style="background-color: #FAF3E1; padding: 16px; border-radius: var(--radius-md); border: 1px solid #eadeb9; margin-bottom: var(--space-lg);">
+            <label class="form-label" for="customer-name" style="color: #6d5225;">Nama Pelanggan <span style="color: var(--color-error);">*</span></label>
+            <input type="text" id="customer-name" class="form-input" placeholder="Masukkan nama Anda" style="background-color: white; border-color: #eadeb9;" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: var(--space-xl);">
+            <label class="form-label" style="margin-bottom: 12px; display: block;">Metode Pembayaran <span style="color: var(--color-error);">*</span></label>
+            <div class="radio-group" style="gap: 12px;">
+              <label class="radio-item payment-option" style="padding: 12px 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <svg class="payment-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M6 6h1"></path><path d="M17 6h1"></path><path d="M17 17h1"></path><path d="M6 17h1"></path></svg>
+                  <span class="payment-label">QRIS</span>
+                </div>
+                <input type="radio" name="payment-method" value="qris" checked style="width: 20px; height: 20px;">
+              </label>
+              
+              <label class="radio-item payment-option" style="padding: 12px 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <svg class="payment-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                  <span class="payment-label">Virtual Account</span>
+                </div>
+                <input type="radio" name="payment-method" value="va" style="width: 20px; height: 20px;">
+              </label>
+            </div>
           </div>
 
           <button id="btn-checkout" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px;" onclick="processCheckout()">
@@ -133,7 +155,7 @@
     <div class="sheet-content" style="padding-top: 0;">
       <!-- Hero Image & Desc -->
       <div style="text-align: center; margin-bottom: var(--space-md);">
-        <img id="modal-img" src="" alt="Menu Image" style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
+        <img id="modal-img" src="" alt="Menu Image" style="width: 100%; aspect-ratio: 1 / 1; height: auto; object-fit: cover; border-radius: var(--radius-md); margin-bottom: var(--space-sm);">
         <h3 id="modal-title" style="font-size: 24px; margin-bottom: 4px;">Nama Item</h3>
         <p id="modal-desc" class="menu-desc" style="font-size: 14px; text-align: left; line-height: 1.5; color: var(--color-text-body);">Deskripsi item</p>
       </div>

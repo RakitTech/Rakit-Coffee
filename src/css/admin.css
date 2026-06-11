@@ -487,6 +487,85 @@ input[type="month"].filter-modern:hover::-webkit-calendar-picker-indicator {
   font-weight: 600;
 }
 
+/* Custom Autocomplete (Datalist Replacement) */
+.custom-autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.custom-autocomplete-wrapper input {
+  padding-right: 40px !important;
+}
+
+.custom-autocomplete-chevron {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: transform 0.3s;
+}
+
+.custom-autocomplete-wrapper.open .custom-autocomplete-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.custom-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--color-surface-lowest);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  overflow: hidden;
+  border: 1px solid var(--color-surface-variant);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.custom-autocomplete-wrapper.open .custom-autocomplete-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.custom-autocomplete-option {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--color-text-body);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.custom-autocomplete-option:hover,
+.custom-autocomplete-option.active {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+}
+
+.custom-autocomplete-option.selected {
+  background-color: rgba(175, 140, 83, 0.1);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.custom-autocomplete-option.create-new {
+  font-style: italic;
+  color: var(--color-accent);
+  border-top: 1px dashed var(--color-surface-variant);
+}
+
+
 /* Modifier Group Builder */
 .modifier-groups-container {
   display: flex;
