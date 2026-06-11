@@ -10,11 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.replace('/login.html');
     return;
   }
-  initGlobalFilters();
-  renderDashboard();
+  initMenuFilters();
+  renderDashboardMenu();
 
   Store.subscribe(() => {
-    renderDashboard();
+    renderDashboardMenu();
   });
 
   // Modal event listener

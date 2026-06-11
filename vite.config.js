@@ -7,7 +7,10 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         kitchen: resolve(__dirname, 'kitchen.html'),
-        admin: resolve(__dirname, 'admin.html')
+        admin: resolve(__dirname, 'admin.html'),
+        login: resolve(__dirname, 'login.html'),
+        admin_analytics: resolve(__dirname, 'admin-analytics.html'),
+        admin_manage: resolve(__dirname, 'admin-manage.html')
       }
     }
   }

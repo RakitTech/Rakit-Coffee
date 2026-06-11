@@ -3,6 +3,29 @@ import { Store } from './store.js';
 let cart = [];
 let myOrderIds = [];
 
+function showLoading(msg = 'Memproses...') {
+  let loader = document.getElementById('global-loader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'global-loader';
+    loader.innerHTML = `
+      <div style="background: rgba(0,0,0,0.5); position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; color: white; flex-direction: column;">
+        <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--color-accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="margin-top: 16px; font-weight: 600;" id="loader-msg"></div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+      </div>
+    `;
+    document.body.appendChild(loader);
+  }
+  document.getElementById('loader-msg').textContent = msg;
+  loader.style.display = 'flex';
+}
+
+function hideLoading() {
+  const loader = document.getElementById('global-loader');
+  if (loader) loader.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderMenu();
   setupNavigation();
@@ -67,15 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-function renderMenu() {
+async function renderMenu() {
+  showLoading('Memuat menu...');
   const menuContainer = document.getElementById('menu-container');
   const categoryList = document.querySelector('.category-list');
-  const menus = Store.getMenu();
+  const menus = await Store.getMenu();
   
   menuContainer.innerHTML = '';
 
   // Get ordered categories from Store, filter to only those that have items in menu
-  const storeCategories = Store.getCategories();
+  const storeCategories = await Store.getCategories();
+  hideLoading();
   const categories = storeCategories.filter(cat => menus.some(m => m.category.toUpperCase() === cat.toUpperCase()));
 
   // Render Category Tabs dynamically
@@ -315,8 +340,11 @@ function renderDynamicModifiers(menuItem, cartItem = null) {
   });
 }
 
-window.openCustomizationModal = function(itemId) {
-  const item = Store.getMenu().find(m => m.id === itemId);
+window.openCustomizationModal = async function(itemId) {
+  showLoading('Memuat menu...');
+  const menus = await Store.getMenu();
+  hideLoading();
+  const item = menus.find(m => m.id === itemId);
   if (!item) return;
 
   document.getElementById('modal-item-id').value = item.id;
@@ -340,11 +368,14 @@ window.openCustomizationModal = function(itemId) {
   document.getElementById('modal-overlay').classList.add('active');
 };
 
-window.openEditModal = function(cartIndex) {
+window.openEditModal = async function(cartIndex) {
   const cartItem = cart[cartIndex];
   if (!cartItem) return;
 
-  const menuDef = Store.getMenu().find(m => m.id === cartItem.id);
+  showLoading('Memuat...');
+  const menus = await Store.getMenu();
+  hideLoading();
+  const menuDef = menus.find(m => m.id === cartItem.id);
   if (!menuDef) return;
 
   document.getElementById('modal-item-id').value = cartItem.id;
@@ -423,11 +454,14 @@ function setupModal() {
   document.getElementById('close-modal').addEventListener('click', closeModal);
   overlay.addEventListener('click', closeModal);
   
-  document.getElementById('customization-form').addEventListener('submit', (e) => {
+  document.getElementById('customization-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    showLoading('Menyiapkan...');
+    const menus = await Store.getMenu();
+    hideLoading();
     const itemId = document.getElementById('modal-item-id').value;
     const cartIndexStr = document.getElementById('modal-cart-index').value;
-    const item = Store.getMenu().find(m => m.id === itemId);
+    const item = menus.find(m => m.id === itemId);
     
     const formData = new FormData(e.target);
     const note = formData.get('note');
@@ -562,7 +596,7 @@ window.removeFromCart = function(index) {
   renderMenu();
 };
 
-window.processCheckout = function() {
+window.processCheckout = async function() {
   const nameInput = document.getElementById('customer-name').value;
   if (!nameInput) {
     alert('Silakan masukkan nama Anda.');
@@ -571,15 +605,17 @@ window.processCheckout = function() {
   
   if (cart.length === 0) return;
   
+  showLoading('Memproses pesanan Anda...');
   const total = cart.reduce((sum, item) => sum + ((item.price + (item.modifierTotal || 0)) * item.qty), 0);
   
-  const order = Store.addOrder({
+  const order = await Store.addOrder({
     customerName: nameInput,
     items: [...cart],
     total: total,
     table: '12' // Hardcoded for prototype
   });
   
+  hideLoading();
   myOrderIds.push(order.id);
   cart = []; // Empty cart
   updateCartUI();
@@ -592,7 +628,7 @@ window.processCheckout = function() {
   updateTrackerStatus();
 };
 
-function updateTrackerStatus() {
+async function updateTrackerStatus() {
   const emptyState = document.getElementById('tracker-empty-state');
   const activeState = document.getElementById('tracker-active-state');
 
@@ -606,7 +642,7 @@ function updateTrackerStatus() {
   if (activeState) activeState.style.display = 'block';
   
   // Refresh order data
-  const allOrders = Store.getOrders();
+  const allOrders = await Store.getOrders();
   const myOrders = myOrderIds.map(id => allOrders.find(o => o.id === id)).filter(Boolean).reverse();
   
   activeState.innerHTML = '';

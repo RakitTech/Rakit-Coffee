@@ -10,11 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.replace('/login.html');
     return;
   }
-  initGlobalFilters();
-  renderDashboard();
+  renderMenuTable();
 
   Store.subscribe(() => {
-    renderDashboard();
+    renderMenuTable();
   });
 
   // Modal event listener
@@ -978,7 +977,7 @@ function createModifierOptionRowHTML(name = '', price = 0) {
       <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}">
       <div class="price-input-wrapper">
         <span class="price-prefix">+Rp</span>
-        <input type="number" class="filter-modern option-price-input" placeholder="0" required min="0" value="${price || ''}">
+        <input type="text" inputmode="numeric" class="filter-modern option-price-input price-format" placeholder="0" required value="${price ? parseInt(price).toLocaleString('id-ID') : ''}">
       </div>
       <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
         <span class="material-symbols-outlined">close</span>
@@ -1126,7 +1125,7 @@ function collectModifierGroups(containerId) {
       const optPriceInput = row.querySelector('.option-price-input');
       if (optNameInput && optPriceInput) {
         const optName = optNameInput.value.trim();
-        const optPrice = parseInt(optPriceInput.value) || 0;
+        const optPrice = parseInt(optPriceInput.value.replace(/\D/g, '')) || 0;
         if (optName) {
           options.push({ name: optName, priceAdd: optPrice });
         }
@@ -1154,12 +1153,12 @@ window.openEditMenu = async function(id) {
   const menu = menus.find(m => m.id === id);
   if (!menu) return;
 
-  renderCategoryOptions('category-list-options-edit');
+  await renderCategoryOptions('edit-menu-category');
 
   document.getElementById('edit-menu-id').value = menu.id;
   document.getElementById('edit-menu-name').value = menu.name;
   document.getElementById('edit-menu-category').value = menu.category;
-  document.getElementById('edit-menu-price').value = menu.price;
+  document.getElementById('edit-menu-price').value = menu.price ? menu.price.toLocaleString('id-ID') : '';
   document.getElementById('edit-menu-desc').value = menu.desc;
   
   const preview = document.getElementById('edit-menu-preview');
@@ -1194,11 +1193,17 @@ window.openEditMenu = async function(id) {
 // =======================
 // CATEGORY MANAGEMENT
 // =======================
-window.renderCategoryOptions = async function() {
-  const datalist = document.getElementById('category-list-options');
-  if (!datalist) return;
+window.renderCategoryOptions = async function(selectId = 'add-menu-category') {
+  const selectEl = document.getElementById(selectId);
+  if (!selectEl) return;
   const categories = await Store.getCategories();
-  datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
+  selectEl.innerHTML = '<option value="" disabled selected>Pilih kategori menu</option>';
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    selectEl.appendChild(opt);
+  });
 };
 
 window.setupCategoryManager = function() {
@@ -1339,13 +1344,25 @@ window.deleteCategory = async function(index) {
 
 // ADD MENU & EDIT MENU LOGIC
 document.addEventListener('DOMContentLoaded', () => {
+  setupCategoryManager();
+
+  document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('price-format') || e.target.classList.contains('option-price-input')) {
+      let val = e.target.value.replace(/\D/g, '');
+      if (val === '') {
+        e.target.value = '';
+      } else {
+        e.target.value = parseInt(val, 10).toLocaleString('id-ID');
+      }
+    }
+  });
   const btnTambah = document.getElementById('btn-tambah-menu');
   const btnCancelAdd = document.getElementById('btn-cancel-add-menu');
   const btnCancelEdit = document.getElementById('btn-cancel-edit-menu');
   
   if (btnTambah) {
     btnTambah.addEventListener('click', () => {
-      renderCategoryOptions('category-list-options');
+      renderCategoryOptions('add-menu-category');
       
       // Reset modifiers
       const containerAdd = document.getElementById('modifier-groups-container-add');
@@ -1476,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const name = document.getElementById('add-menu-name').value.trim();
       const category = document.getElementById('add-menu-category').value.trim();
-      const price = parseInt(document.getElementById('add-menu-price').value);
+      const price = parseInt(document.getElementById('add-menu-price').value.replace(/\D/g, '')) || 0;
       const desc = document.getElementById('add-menu-desc').value.trim();
       const imgPreview = document.getElementById('add-menu-preview');
       const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
@@ -1525,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = document.getElementById('edit-menu-id').value;
       const name = document.getElementById('edit-menu-name').value.trim();
       const category = document.getElementById('edit-menu-category').value.trim();
-      const price = parseInt(document.getElementById('edit-menu-price').value);
+      const price = parseInt(document.getElementById('edit-menu-price').value.replace(/\D/g, '')) || 0;
       const desc = document.getElementById('edit-menu-desc').value.trim();
       
       const modifierGroups = collectModifierGroups('modifier-groups-container-edit');
@@ -1553,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-async function renderCategoryOptions(datalistId) {
+async function renderCategoryOptionsDuplicate(datalistId) {
   const datalist = document.getElementById(datalistId);
   if (!datalist) return;
   datalist.innerHTML = '';

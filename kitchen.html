@@ -15,7 +15,12 @@
       <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-surface-lowest);">kitchen</span>
       <h1>Kitchen Display System</h1>
     </div>
-    <div class="kds-time" id="clock" style="color: var(--color-surface-lowest);">00:00:00</div>
+    <div style="display: flex; gap: 16px; align-items: center;">
+      <div class="kds-time" id="clock" style="color: var(--color-surface-lowest);">00:00:00</div>
+      <button id="btn-logout" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: none; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">logout</span> Keluar
+      </button>
+    </div>
   </header>
 
   <main class="kds-board">

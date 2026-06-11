@@ -1,12 +1,25 @@
 import { Store } from './store.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (!Store.isAuthenticated()) {
+    window.location.replace('/login.html');
+    return;
+  }
+
   startClock();
   renderBoard();
 
   Store.subscribe(() => {
     renderBoard();
   });
+
+  const btnLogout = document.getElementById('btn-logout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async () => {
+      await Store.logout();
+      window.location.replace('/login.html');
+    });
+  }
 });
 
 function startClock() {
@@ -22,8 +35,8 @@ function startClock() {
   }, 10000);
 }
 
-function renderBoard() {
-  const orders = Store.getOrders();
+async function renderBoard() {
+  const orders = await Store.getOrders();
   
   const cols = {
     'Diterima': document.getElementById('col-diterima'),
@@ -122,10 +135,10 @@ function renderBoard() {
   document.getElementById('count-siap').textContent = counts['Siap'];
 }
 
-window.updateStatus = function(orderId, newStatus) {
-  Store.updateOrderStatus(orderId, newStatus);
+window.updateStatus = async function(orderId, newStatus) {
+  await Store.updateOrderStatus(orderId, newStatus);
 };
 
-window.updateItemStatus = function(orderId, itemId, newStatus) {
-  Store.updateOrderItemStatus(orderId, itemId, newStatus);
+window.updateItemStatus = async function(orderId, itemId, newStatus) {
+  await Store.updateOrderItemStatus(orderId, itemId, newStatus);
 };

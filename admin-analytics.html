@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Rakit Coffee</title>
+  <!-- Google Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="admin-body">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h1 style="color: var(--color-accent); font-size: 24px;">Rakit<span style="color: var(--color-text-body);">Admin</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/admin.html" class="sidebar-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard Penjualan
+      </a>
+      <a href="/admin-analytics.html" class="sidebar-item active">
+        <span class="material-symbols-outlined">analytics</span>
+        Dashboard Menu
+      </a>
+      <a href="/admin-manage.html" class="sidebar-item">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        Kelola Menu
+      </a>
+      <a href="#" class="sidebar-item" id="btn-logout" style="margin-top: auto; color: #dc3545;">
+        <span class="material-symbols-outlined">logout</span>
+        Keluar
+      </a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <!-- DASHBOARD MENU VIEW -->
+    <section id="view-dashboard-menu" class="admin-view active">
+      <header class="admin-header">
+        <h2 style="color: white;">Dashboard Menu</h2>
+      </header>
+      
+      <div class="admin-content">
+        <div class="global-filters" style="margin-bottom: var(--space-xl); display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">calendar_month</span>
+            Filter Periode:
+          </div>
+          <select id="menu-filter-mode" class="filter-modern" style="width: auto;">
+            <option value="daily">Harian</option>
+            <option value="monthly">Bulanan</option>
+            <option value="yearly">Tahunan</option>
+            <option value="range">Rentang Waktu</option>
+          </select>
+
+          <!-- Inputs -->
+          <input type="date" id="menu-filter-daily" class="filter-modern filter-input-group" style="width: auto;">
+          <input type="month" id="menu-filter-monthly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+          <select id="menu-filter-yearly" class="filter-modern filter-input-group" style="width: auto; display: none;">
+            <!-- JS populated -->
+          </select>
+
+          <div id="menu-filter-range" class="filter-input-group" style="display: none; align-items: center; gap: 8px;">
+            <input type="date" id="menu-filter-range-start" class="filter-modern" style="width: auto;">
+            <span style="font-size: 14px; color: var(--color-text-muted);">s/d</span>
+            <input type="date" id="menu-filter-range-end" class="filter-modern" style="width: auto;">
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <h3 style="margin: 0;">Analisis Penjualan Menu</h3>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="analysis-search" class="filter-modern" placeholder="Cari Nama Menu..." style="width: 180px;">
+              <select id="analysis-filter-category" class="filter-modern" style="width: 140px;">
+                <option value="ALL">Semua Kategori</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="rank" style="width: 100px; text-align: center;">Peringkat <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="name">Nama Menu <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable" data-sort="category">Kategori <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                  <th class="sortable active" data-sort="qty" style="text-align: center;">Terjual <span class="material-symbols-outlined sort-icon">arrow_downward</span></th>
+                  <th class="sortable" data-sort="revenue" style="text-align: right;">Total Pendapatan <span class="material-symbols-outlined sort-icon">swap_vert</span></th>
+                </tr>
+              </thead>
+              <tbody id="menu-analysis-table-body">
+                <!-- Data populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+  <script type="module" src="/src/admin-analytics.js"></script>
+</body>
+</html>

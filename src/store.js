@@ -40,120 +40,200 @@ if (!localStorage.getItem('rakit_orders') || localStorage.getItem('clear_old_ord
 }
 
 export const Store = {
-  getMenu() {
-    return JSON.parse(localStorage.getItem('rakit_menu') || '[]');
+  // Auth methods
+  async login(username, password) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        if (username === 'admin' && password === 'admin123') {
+          localStorage.setItem('rakit_token', 'dummy_token_' + Date.now());
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      }, 600);
+    });
   },
   
-  updateMenu(id, data) {
-    const menus = this.getMenu();
-    const index = menus.findIndex(m => m.id === id);
-    if (index !== -1) {
-      menus[index] = { ...menus[index], ...data };
-      localStorage.setItem('rakit_menu', JSON.stringify(menus));
-      window.dispatchEvent(new Event('storage')); // Trigger update across tabs
-    }
+  async logout() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        localStorage.removeItem('rakit_token');
+        resolve();
+      }, 300);
+    });
+  },
+  
+  isAuthenticated() {
+    return !!localStorage.getItem('rakit_token');
   },
 
-  addMenu(data) {
-    const menus = this.getMenu();
-    menus.push(data);
-    localStorage.setItem('rakit_menu', JSON.stringify(menus));
-    window.dispatchEvent(new Event('storage'));
+  async getMenu() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(JSON.parse(localStorage.getItem('rakit_menu') || '[]'));
+      }, 500);
+    });
   },
-
-  deleteMenu(id) {
-    let menus = this.getMenu();
-    menus = menus.filter(m => m.id !== id);
-    localStorage.setItem('rakit_menu', JSON.stringify(menus));
-    window.dispatchEvent(new Event('storage'));
-  },
-
-  getCategories() {
-    const cats = localStorage.getItem('rakit_categories');
-    if (cats) return JSON.parse(cats);
-    
-    const menus = this.getMenu();
-    const uniqueCats = [...new Set(menus.map(m => m.category))];
-    if (uniqueCats.length === 0) return ['SIGNATURE', 'KOPI', 'NON-COFFEE', 'MAKANAN'];
-    return uniqueCats;
-  },
-
-  saveCategories(categories) {
-    localStorage.setItem('rakit_categories', JSON.stringify(categories));
-    window.dispatchEvent(new Event('storage'));
-  },
-
-  getOrders() {
-    return JSON.parse(localStorage.getItem('rakit_orders') || '[]');
-  },
-
-  addOrder(orderData) {
-    const orders = this.getOrders();
-    const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
-    
-    const itemsWithStatus = orderData.items.map(item => ({
-      ...item,
-      itemId: 'ITM-' + Math.floor(10000 + Math.random() * 90000),
-      status: 'Diterima',
-      completedAt: null
-    }));
-
-    const newOrder = {
-      ...orderData,
-      id: orderId,
-      items: itemsWithStatus,
-      status: 'Diterima', // Still tracks overall order status
-      timestamp: new Date().toISOString()
-    };
-    orders.push(newOrder);
-    localStorage.setItem('rakit_orders', JSON.stringify(orders));
-    window.dispatchEvent(new Event('storage'));
-    return newOrder;
-  },
-
-  updateOrderStatus(orderId, newStatus) {
-    const orders = this.getOrders();
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      order.status = newStatus;
-      if (newStatus === 'Siap') {
-        order.completedAt = new Date().toISOString();
-      }
-      localStorage.setItem('rakit_orders', JSON.stringify(orders));
-      window.dispatchEvent(new Event('storage'));
-    }
-  },
-
-  updateOrderItemStatus(orderId, itemId, newStatus) {
-    const orders = this.getOrders();
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      const item = order.items.find(i => i.itemId === itemId);
-      if (item) {
-        item.status = newStatus;
-        if (newStatus === 'Siap') {
-          item.completedAt = new Date().toISOString();
+  
+  async updateMenu(id, data) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const menus = JSON.parse(localStorage.getItem('rakit_menu') || '[]');
+        const index = menus.findIndex(m => m.id === id);
+        if (index !== -1) {
+          menus[index] = { ...menus[index], ...data };
+          localStorage.setItem('rakit_menu', JSON.stringify(menus));
+          window.dispatchEvent(new Event('storage'));
         }
+        resolve();
+      }, 500);
+    });
+  },
 
-        // Check if all items in this order are now 'Siap'
-        const allSiap = order.items.every(i => i.status === 'Siap');
-        if (allSiap) {
-          order.status = 'Siap';
-          if (!order.completedAt) {
-            order.completedAt = new Date().toISOString();
-          }
-        } else {
-          // If at least one item is Dimasak or Siap, order status should logically be Dimasak
-          const anyDimasak = order.items.some(i => i.status === 'Dimasak' || i.status === 'Siap');
-          if (anyDimasak && order.status === 'Diterima') {
-            order.status = 'Dimasak';
-          }
-        }
+  async addMenu(data) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const menus = JSON.parse(localStorage.getItem('rakit_menu') || '[]');
+        menus.push(data);
+        localStorage.setItem('rakit_menu', JSON.stringify(menus));
+        window.dispatchEvent(new Event('storage'));
+        resolve();
+      }, 500);
+    });
+  },
 
+  async deleteMenu(id) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        let menus = JSON.parse(localStorage.getItem('rakit_menu') || '[]');
+        menus = menus.filter(m => m.id !== id);
+        localStorage.setItem('rakit_menu', JSON.stringify(menus));
+        window.dispatchEvent(new Event('storage'));
+        resolve();
+      }, 500);
+    });
+  },
+
+  async getCategories() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const cats = localStorage.getItem('rakit_categories');
+        if (cats) return resolve(JSON.parse(cats));
+        
+        const menus = JSON.parse(localStorage.getItem('rakit_menu') || '[]');
+        const uniqueCats = [...new Set(menus.map(m => m.category))];
+        if (uniqueCats.length === 0) return resolve(['SIGNATURE', 'KOPI', 'NON-COFFEE', 'MAKANAN']);
+        resolve(uniqueCats);
+      }, 200);
+    });
+  },
+
+  async saveCategories(categories) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        localStorage.setItem('rakit_categories', JSON.stringify(categories));
+        window.dispatchEvent(new Event('storage'));
+        resolve();
+      }, 400);
+    });
+  },
+
+  async getOrders() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve(JSON.parse(localStorage.getItem('rakit_orders') || '[]'));
+      }, 500);
+    });
+  },
+
+  async addOrder(orderData) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const orders = JSON.parse(localStorage.getItem('rakit_orders') || '[]');
+        const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+        
+        let calculatedTotal = 0;
+        const itemsWithStatus = orderData.items.map(item => {
+          const itemFinalPrice = item.price + (item.modifierTotal || 0);
+          calculatedTotal += itemFinalPrice * item.qty;
+          
+          return {
+            ...item,
+            itemId: 'ITM-' + Math.floor(10000 + Math.random() * 90000),
+            status: 'Diterima',
+            completedAt: null
+          };
+        });
+
+        const newOrder = {
+          customerName: orderData.customerName,
+          table: orderData.table || '12',
+          id: orderId,
+          items: itemsWithStatus,
+          total: calculatedTotal,
+          status: 'Diterima',
+          timestamp: new Date().toISOString()
+        };
+        
+        orders.push(newOrder);
         localStorage.setItem('rakit_orders', JSON.stringify(orders));
         window.dispatchEvent(new Event('storage'));
-      }
-    }
+        resolve(newOrder);
+      }, 800);
+    });
+  },
+
+  async updateOrderStatus(orderId, newStatus) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const orders = JSON.parse(localStorage.getItem('rakit_orders') || '[]');
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          order.status = newStatus;
+          if (newStatus === 'Siap') {
+            order.completedAt = new Date().toISOString();
+          }
+          localStorage.setItem('rakit_orders', JSON.stringify(orders));
+          window.dispatchEvent(new Event('storage'));
+        }
+        resolve();
+      }, 400);
+    });
+  },
+
+  async updateOrderItemStatus(orderId, itemId, newStatus) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const orders = JSON.parse(localStorage.getItem('rakit_orders') || '[]');
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          const item = order.items.find(i => i.itemId === itemId);
+          if (item) {
+            item.status = newStatus;
+            if (newStatus === 'Siap') {
+              item.completedAt = new Date().toISOString();
+            }
+
+            const allSiap = order.items.every(i => i.status === 'Siap');
+            if (allSiap) {
+              order.status = 'Siap';
+              if (!order.completedAt) {
+                order.completedAt = new Date().toISOString();
+              }
+            } else {
+              const anyDimasak = order.items.some(i => i.status === 'Dimasak' || i.status === 'Siap');
+              if (anyDimasak && order.status === 'Diterima') {
+                order.status = 'Dimasak';
+              }
+            }
+
+            localStorage.setItem('rakit_orders', JSON.stringify(orders));
+            window.dispatchEvent(new Event('storage'));
+          }
+        }
+        resolve();
+      }, 300);
+    });
   },
 
   // Helper untuk mendengarkan perubahan dari tab lain
