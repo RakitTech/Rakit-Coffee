@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rakit Coffee - Menu</title>
-  <link rel="stylesheet" href="./src/css/design-system.css?v=999">
-  <link rel="stylesheet" href="./src/css/customer.css?v=999">
-  <script type="module" src="./src/customer.js?v=999"></script>
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/customer.css">
+  <script type="module" src="./src/customer.js"></script>
 </head>
 <body>
 
@@ -156,23 +156,8 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Tingkat Gula (Khusus Minuman)</label>
-          <div class="radio-group">
-            <label class="radio-item">
-              <span>Normal (100%)</span>
-              <input type="radio" name="sugar" value="Normal" checked>
-            </label>
-            <label class="radio-item">
-              <span>Less Sugar (50%)</span>
-              <input type="radio" name="sugar" value="Less">
-            </label>
-            <label class="radio-item">
-              <span>No Sugar (0%)</span>
-              <input type="radio" name="sugar" value="None">
-            </label>
-          </div>
-        </div>
+        <!-- Dynamic Modifier Groups (rendered by JS per menu item) -->
+        <div id="dynamic-modifiers-container"></div>
 
         <div class="form-group" style="margin-top: var(--space-lg);">
           <label class="form-label">Catatan Tambahan</label>

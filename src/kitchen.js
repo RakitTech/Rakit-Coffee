@@ -69,8 +69,18 @@ function renderBoard() {
         
         let itemsHtml = '<ul class="kds-item-list" style="margin-top: 12px;">';
         let noteHtml = '';
-        if (item.sugar && item.sugar !== 'Normal') noteHtml += `<span class="kds-item-note">Gula: ${item.sugar}</span> `;
-        if (item.note) noteHtml += `<span class="kds-item-note">Catatan: ${item.note}</span>`;
+        if (item.sugar && item.sugar !== 'Normal') {
+          noteHtml += `<span class="kds-item-note" style="display: block;">Gula: ${item.sugar}</span>`;
+        }
+        if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+          item.selectedModifiers.forEach(modGroup => {
+            const selectedNames = modGroup.selected.map(s => s.name).join(', ');
+            noteHtml += `<span class="kds-item-note" style="display: block;">${modGroup.groupName}: ${selectedNames}</span>`;
+          });
+        }
+        if (item.note) {
+          noteHtml += `<span class="kds-item-note" style="display: block;">Catatan: ${item.note}</span>`;
+        }
         
         itemsHtml += `
           <li>

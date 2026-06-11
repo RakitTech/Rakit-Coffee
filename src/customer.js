@@ -229,6 +229,63 @@ function setupCategoryFilter() {
   });
 }
 
+window.recalculateModalPrice = function() {
+  const priceEl = document.getElementById('modal-price');
+  const basePrice = parseInt(priceEl.dataset.basePrice) || 0;
+  const qty = parseInt(document.getElementById('modal-quantity-val').value) || 1;
+  
+  let modifierTotal = 0;
+  document.querySelectorAll('.modifier-input:checked').forEach(input => {
+    modifierTotal += parseInt(input.dataset.price) || 0;
+  });
+
+  const finalPrice = (basePrice + modifierTotal) * qty;
+  priceEl.textContent = `Rp ${finalPrice.toLocaleString('id-ID')}`;
+};
+
+function renderDynamicModifiers(menuItem, cartItem = null) {
+  const container = document.getElementById('dynamic-modifiers-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+  
+  if (!menuItem.modifierGroups || menuItem.modifierGroups.length === 0) return;
+
+  const previousSelections = cartItem ? (cartItem.selectedModifiers || []) : [];
+
+  menuItem.modifierGroups.forEach((group, groupIdx) => {
+    const isSingle = group.type === 'single';
+    const inputType = isSingle ? 'radio' : 'checkbox';
+    const nameAttr = `mod_${groupIdx}`;
+    
+    // Find previous selection for this group
+    const prevGroup = previousSelections.find(g => g.groupName === group.name);
+    const prevSelectedNames = prevGroup ? prevGroup.selected.map(s => s.name) : [];
+
+    const optionsHtml = group.options.map((opt, optIdx) => {
+      const isChecked = prevSelectedNames.includes(opt.name) || (isSingle && optIdx === 0 && !cartItem);
+      const priceText = opt.priceAdd > 0 ? ` (+Rp ${opt.priceAdd.toLocaleString('id-ID')})` : '';
+      
+      return `
+        <label class="${isSingle ? 'radio-item' : 'checkbox-item'}">
+          <span>${opt.name}${priceText}</span>
+          <input type="${inputType}" name="${nameAttr}" value="${opt.name}" data-price="${opt.priceAdd}" class="modifier-input" data-group="${group.name}" ${isChecked ? 'checked' : ''} onchange="recalculateModalPrice()">
+        </label>
+      `;
+    }).join('');
+
+    const groupHtml = `
+      <div class="form-group">
+        <label class="form-label">${group.name} ${group.required && isSingle ? '<span style="color: var(--color-error);">*</span>' : ''}</label>
+        <div class="${isSingle ? 'radio-group' : 'checkbox-group'}">
+          ${optionsHtml}
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', groupHtml);
+  });
+}
+
 window.openCustomizationModal = function(itemId) {
   const item = Store.getMenu().find(m => m.id === itemId);
   if (!item) return;
@@ -240,12 +297,14 @@ window.openCustomizationModal = function(itemId) {
   document.getElementById('modal-img').src = item.image;
   
   document.getElementById('modal-price').dataset.basePrice = item.price;
-  document.getElementById('modal-price').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
+  
+  renderDynamicModifiers(item);
   
   // Reset form and quantity
   document.getElementById('customization-form').reset();
   document.getElementById('modal-quantity-val').value = 1;
   document.getElementById('modal-quantity-display').textContent = '1';
+  recalculateModalPrice();
   
   // Show modal
   document.getElementById('customization-modal').classList.add('active');
@@ -271,10 +330,7 @@ window.openEditModal = function(cartIndex) {
   // Set form values
   document.getElementById('customization-form').reset();
   
-  if (cartItem.sugar) {
-    const sugarRadio = document.querySelector(`input[name="sugar"][value="${cartItem.sugar}"]`);
-    if (sugarRadio) sugarRadio.checked = true;
-  }
+  renderDynamicModifiers(menuDef, cartItem);
   
   const noteTextarea = document.querySelector('textarea[name="note"]');
   if (noteTextarea && cartItem.note) {
@@ -284,8 +340,7 @@ window.openEditModal = function(cartIndex) {
   document.getElementById('modal-quantity-val').value = cartItem.qty;
   document.getElementById('modal-quantity-display').textContent = cartItem.qty;
   
-  const totalPrice = cartItem.price * cartItem.qty;
-  document.getElementById('modal-price').textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+  recalculateModalPrice();
   
   // Show modal
   document.getElementById('customization-modal').classList.add('active');
@@ -324,9 +379,7 @@ window.updateModalQuantity = function(change) {
   input.value = newVal;
   display.textContent = newVal;
   
-  const basePrice = parseInt(priceEl.dataset.basePrice) || 0;
-  const totalPrice = basePrice * newVal;
-  priceEl.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+  recalculateModalPrice();
 };
 
 function setupModal() {
@@ -348,15 +401,36 @@ function setupModal() {
     const item = Store.getMenu().find(m => m.id === itemId);
     
     const formData = new FormData(e.target);
-    const sugar = formData.get('sugar');
     const note = formData.get('note');
     const qty = parseInt(formData.get('quantity')) || 1;
     
+    // Collect dynamic modifiers
+    const selectedModifiers = [];
+    let modifierTotal = 0;
+    
+    if (item.modifierGroups) {
+      item.modifierGroups.forEach((group, idx) => {
+        const inputs = document.querySelectorAll(`input[name="mod_${idx}"]:checked`);
+        if (inputs.length > 0) {
+          const selectedOpts = Array.from(inputs).map(input => {
+            const priceAdd = parseInt(input.dataset.price) || 0;
+            modifierTotal += priceAdd;
+            return { name: input.value, priceAdd: priceAdd };
+          });
+          selectedModifiers.push({
+            groupName: group.name,
+            selected: selectedOpts
+          });
+        }
+      });
+    }
+
     const cartItemData = {
       ...item,
-      sugar,
       note,
-      qty: qty
+      qty: qty,
+      selectedModifiers: selectedModifiers,
+      modifierTotal: modifierTotal
     };
 
     if (cartIndexStr !== '') {
@@ -386,7 +460,7 @@ function updateCartUI() {
   const isCartView = document.getElementById('view-cart').classList.contains('active');
   
   if (cart.length > 0 && !isCartView) {
-    const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const total = cart.reduce((sum, item) => sum + ((item.price + (item.modifierTotal || 0)) * item.qty), 0);
     document.getElementById('cart-count').textContent = `${cart.length} ITEM`;
     document.getElementById('cart-total').textContent = `Rp ${total.toLocaleString('id-ID')}`;
     floatingBar.style.display = 'flex';
@@ -411,16 +485,31 @@ function renderCartPage() {
   cartContainer.innerHTML = '';
   
   cart.forEach((item, index) => {
-    total += item.price * item.qty;
+    const itemFinalPrice = item.price + (item.modifierTotal || 0);
+    total += itemFinalPrice * item.qty;
+    
+    let modsHtml = '';
+    // Backward compatibility for old orders with sugar
+    if (item.sugar && item.sugar !== 'Normal') {
+      modsHtml += `<p class="menu-desc" style="margin-bottom: 2px;">Gula: ${item.sugar}</p>`;
+    }
+    // New dynamic modifiers
+    if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+      item.selectedModifiers.forEach(modGroup => {
+        const selectedNames = modGroup.selected.map(s => s.name).join(', ');
+        modsHtml += `<p class="menu-desc" style="margin-bottom: 2px;">${modGroup.groupName}: ${selectedNames}</p>`;
+      });
+    }
+
     const itemEl = document.createElement('div');
     itemEl.className = 'cart-item';
     itemEl.innerHTML = `
       <img src="${item.image}" class="cart-item-img" alt="${item.name}">
       <div class="cart-item-details">
         <h4 class="cart-item-title">${item.name}</h4>
-        <p class="menu-desc" style="margin-bottom: 2px;">${item.sugar ? `Gula: ${item.sugar}` : ''}</p>
+        ${modsHtml}
         <p class="menu-desc" style="margin-bottom: 2px;">${item.note ? `Catatan: ${item.note}` : ''}</p>
-        <p class="cart-item-price">Rp ${item.price.toLocaleString('id-ID')}</p>
+        <p class="cart-item-price">Rp ${itemFinalPrice.toLocaleString('id-ID')}</p>
       </div>
       <div class="cart-item-actions">
         <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-variant); color: var(--color-primary);" onclick="openEditModal(${index})">
@@ -453,7 +542,7 @@ window.processCheckout = function() {
   
   if (cart.length === 0) return;
   
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const total = cart.reduce((sum, item) => sum + ((item.price + (item.modifierTotal || 0)) * item.qty), 0);
   
   const order = Store.addOrder({
     customerName: nameInput,
@@ -509,16 +598,30 @@ function updateTrackerStatus() {
     card.style.borderRadius = 'var(--radius-lg)';
     card.style.boxShadow = 'var(--shadow-sm)';
     
-    const itemsHtml = order.items.map(item => `
+    const itemsHtml = order.items.map(item => {
+      let modsHtml = '';
+      if (item.sugar && item.sugar !== 'Normal') {
+        modsHtml += `<div style="color: var(--color-text-muted); font-size: 12px; margin-top: 2px;">Gula: ${item.sugar}</div>`;
+      }
+      if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+        item.selectedModifiers.forEach(modGroup => {
+          const selectedNames = modGroup.selected.map(s => s.name).join(', ');
+          modsHtml += `<div style="color: var(--color-text-muted); font-size: 12px; margin-top: 2px;">${modGroup.groupName}: ${selectedNames}</div>`;
+        });
+      }
+      
+      const itemFinalPrice = item.price + (item.modifierTotal || 0);
+
+      return `
       <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
         <div style="flex: 1; padding-right: 16px;">
           <span style="font-weight: 600;">${item.qty}x ${item.name}</span>
-          ${item.sugar ? `<div style="color: var(--color-text-muted); font-size: 12px; margin-top: 2px;">Gula: ${item.sugar}</div>` : ''}
+          ${modsHtml}
           ${item.note ? `<div style="color: var(--color-text-muted); font-size: 12px; margin-top: 2px;">Catatan: ${item.note}</div>` : ''}
         </div>
-        <div style="font-weight: 500;">Rp ${(item.price * item.qty).toLocaleString('id-ID')}</div>
+        <div style="font-weight: 500;">Rp ${(itemFinalPrice * item.qty).toLocaleString('id-ID')}</div>
       </div>
-    `).join('');
+    `}).join('');
     
     card.innerHTML = `
       <div style="text-align: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--color-surface-variant);">
