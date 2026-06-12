@@ -1,0 +1,90 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================
+// TABEL: menus — Master Data Item Menu
+// ============================================================
+model Menu {
+  id             String   @id @db.VarChar(50)
+  name           String   @db.VarChar(150)
+  category       String   @db.VarChar(50)
+  desc           String?  @db.Text
+  price          Int
+  image          String?  @db.Text
+  available      Boolean  @default(true)
+  modifierGroups Json?    // Menyimpan opsi modifikasi dinamis (array of objects)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("menus")
+}
+
+// ============================================================
+// TABEL: categories — Daftar Kategori Menu
+// ============================================================
+model Category {
+  name String @id @db.VarChar(50)
+
+  @@map("categories")
+}
+
+// ============================================================
+// TABEL: orders — Header Pesanan
+// ============================================================
+model Order {
+  id           String      @id @db.VarChar(20)
+  customerName String      @map("customer_name") @db.VarChar(100)
+  table        String      @db.VarChar(20)
+  total        Int
+  status       String      @default("Diterima") @db.VarChar(50) // Diterima, Dimasak, Siap
+  timestamp    DateTime    @default(now())
+  completedAt  DateTime?   @map("completed_at")
+  items        OrderItem[]
+
+  @@map("orders")
+}
+
+// ============================================================
+// TABEL: order_items — Detail Item Pesanan
+// ============================================================
+model OrderItem {
+  itemId            String    @id @db.VarChar(20) @map("item_id")
+  orderId           String    @map("order_id") @db.VarChar(20)
+  id                String?   @db.VarChar(50)                      // ID menu referensi (optional jika menu dihapus)
+  name              String    @db.VarChar(150)                     // Snapshot nama saat order
+  price             Int                                            // Snapshot harga saat order
+  qty               Int
+  modifierTotal     Int       @default(0) @map("modifier_total")   // Total harga modifier
+  selectedModifiers Json?                                          // Array modifikasi yang dipilih
+  note              String?   @db.Text                             // Catatan khusus
+  status            String    @default("Diterima") @db.VarChar(50) // Diterima, Dimasak, Siap
+  completedAt       DateTime? @map("completed_at")
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// ============================================================
+// TABEL: cms_settings — Pengaturan Tampilan & Tema Global
+// ============================================================
+model CmsSetting {
+  id                 Int     @id @default(1)
+  themeColor         String  @default("#AF8C53") @map("theme_color") @db.VarChar(7)
+  fontFamily         String  @default("'Inter', sans-serif") @map("font_family") @db.VarChar(100)
+  heroTitle          String  @default("Selamat Datang di Rakit Coffee") @map("hero_title") @db.Text
+  heroSubtitle       String  @default("Nikmati racikan kopi premium dan hidangan lezat yang disiapkan khusus untuk menemani momen berharga Anda hari ini.") @map("hero_subtitle") @db.Text
+  heroImage          String? @map("hero_image") @db.Text
+  heroTitleColor     String  @default("#ffeec5") @map("hero_title_color") @db.VarChar(7)
+  heroSubtitleColor  String  @default("#ffffff") @map("hero_subtitle_color") @db.VarChar(7)
+  heroTitleFont      String? @map("hero_title_font") @db.VarChar(100)
+  heroSubtitleFont   String? @map("hero_subtitle_font") @db.VarChar(100)
+
+  @@map("cms_settings")
+}
