@@ -35,15 +35,27 @@ async function applyCmsSettings() {
   document.documentElement.style.setProperty('--shadow-accent', `0 8px 30px ${settings.themeColor}4D`); // 30% opacity hex
   document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
   
-  // Create dynamic Google Fonts link if font isn't standard
-  if (settings.fontFamily.includes('Lora') || settings.fontFamily.includes('Montserrat') || 
-      settings.fontFamily.includes('Poppins') || settings.fontFamily.includes('Oswald')) {
-    const fontName = settings.fontFamily.split(',')[0].replace(/'/g, '').trim();
-    const link = document.createElement('link');
-    link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  }
+  // Function to load Google Font dynamically
+  const loadGoogleFont = (fontString) => {
+    if (!fontString) return;
+    if (fontString.includes('Lora') || fontString.includes('Montserrat') || 
+        fontString.includes('Poppins') || fontString.includes('Oswald')) {
+      const fontName = fontString.split(',')[0].replace(/'/g, '').trim();
+      const existingLink = document.querySelector(`link[href*="${fontName.replace(/ /g, '+')}"]`);
+      if (!existingLink) {
+        const link = document.createElement('link');
+        link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+      }
+    }
+  };
+
+  // Load necessary fonts
+  loadGoogleFont(settings.fontFamily);
+  loadGoogleFont(settings.heroTitleFont);
+  loadGoogleFont(settings.heroSubtitleFont);
+
 
   // Apply Hero Elements
   const heroImg = document.getElementById('cms-hero-img');
@@ -51,8 +63,18 @@ async function applyCmsSettings() {
   const heroSubtitle = document.getElementById('cms-hero-subtitle');
 
   if (heroImg && settings.heroImage) heroImg.src = settings.heroImage;
-  if (heroTitle && settings.heroTitle) heroTitle.textContent = settings.heroTitle;
-  if (heroSubtitle && settings.heroSubtitle) heroSubtitle.textContent = settings.heroSubtitle;
+  if (heroTitle && settings.heroTitle) {
+    heroTitle.textContent = settings.heroTitle;
+    if (settings.heroTitleColor) heroTitle.style.color = settings.heroTitleColor;
+    if (settings.heroTitleFont) heroTitle.style.fontFamily = settings.heroTitleFont;
+    else heroTitle.style.fontFamily = 'var(--font-heading)';
+  }
+  if (heroSubtitle && settings.heroSubtitle) {
+    heroSubtitle.textContent = settings.heroSubtitle;
+    if (settings.heroSubtitleColor) heroSubtitle.style.color = settings.heroSubtitleColor;
+    if (settings.heroSubtitleFont) heroSubtitle.style.fontFamily = settings.heroSubtitleFont;
+    else heroSubtitle.style.fontFamily = 'var(--font-body)';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

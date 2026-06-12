@@ -10,12 +10,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const fontInput = document.getElementById('cms-font');
   const titleInput = document.getElementById('cms-hero-title');
   const subtitleInput = document.getElementById('cms-hero-subtitle');
+  const titleColorInput = document.getElementById('cms-hero-title-color');
+  const subtitleColorInput = document.getElementById('cms-hero-subtitle-color');
+  const titleFontInput = document.getElementById('cms-hero-title-font');
+  const subtitleFontInput = document.getElementById('cms-hero-subtitle-font');
   const previewImg = document.getElementById('cms-hero-preview');
 
   if (themeInput) themeInput.value = settings.themeColor;
   if (fontInput) fontInput.value = settings.fontFamily;
   if (titleInput) titleInput.value = settings.heroTitle;
   if (subtitleInput) subtitleInput.value = settings.heroSubtitle;
+  if (titleColorInput && settings.heroTitleColor) titleColorInput.value = settings.heroTitleColor;
+  if (subtitleColorInput && settings.heroSubtitleColor) subtitleColorInput.value = settings.heroSubtitleColor;
+  if (titleFontInput && settings.heroTitleFont) titleFontInput.value = settings.heroTitleFont;
+  if (subtitleFontInput && settings.heroSubtitleFont) subtitleFontInput.value = settings.heroSubtitleFont;
   
   if (settings.heroImage && previewImg) {
     previewImg.src = settings.heroImage;
@@ -93,6 +101,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         fontFamily: fontInput.value,
         heroTitle: titleInput.value.trim(),
         heroSubtitle: subtitleInput.value.trim(),
+        heroTitleColor: titleColorInput ? titleColorInput.value : '#ffeec5',
+        heroSubtitleColor: subtitleColorInput ? subtitleColorInput.value : '#ffffff',
+        heroTitleFont: titleFontInput ? titleFontInput.value : '',
+        heroSubtitleFont: subtitleFontInput ? subtitleFontInput.value : '',
         heroImage: previewImg.style.display === 'block' ? previewImg.src : settings.heroImage
       };
 

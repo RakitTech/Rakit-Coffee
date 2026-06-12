@@ -95,12 +95,38 @@
               <div style="display: flex; flex-direction: column; gap: 16px;">
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <label for="cms-hero-title" style="font-weight: 600; font-size: 14px;">Teks Headline (Judul)</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="cms-hero-title" style="font-weight: 600; font-size: 14px;">Teks Headline (Judul)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <select id="cms-hero-title-font" class="filter-modern" style="border: 1px solid var(--color-surface-variant); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 12px; height: 30px;">
+                        <option value="">(Font Bawaan Tema)</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Lora', serif">Lora</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                        <option value="'Oswald', sans-serif">Oswald</option>
+                      </select>
+                      <input type="color" id="cms-hero-title-color" value="#ffeec5" style="border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0;" title="Pilih Warna Judul">
+                    </div>
+                  </div>
                   <input type="text" id="cms-hero-title" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <label for="cms-hero-subtitle" style="font-weight: 600; font-size: 14px;">Sub-teks (Deskripsi)</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="cms-hero-subtitle" style="font-weight: 600; font-size: 14px;">Sub-teks (Deskripsi)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <select id="cms-hero-subtitle-font" class="filter-modern" style="border: 1px solid var(--color-surface-variant); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 12px; height: 30px;">
+                        <option value="">(Font Bawaan Tema)</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Lora', serif">Lora</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                        <option value="'Oswald', sans-serif">Oswald</option>
+                      </select>
+                      <input type="color" id="cms-hero-subtitle-color" value="#ffffff" style="border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; padding: 0;" title="Pilih Warna Sub-teks">
+                    </div>
+                  </div>
                   <textarea id="cms-hero-subtitle" rows="3" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md); font-family: var(--font-body); resize: vertical;"></textarea>
                 </div>
 
