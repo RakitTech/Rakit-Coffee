@@ -11,10 +11,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" crossorigin src="/assets/admin_manage-sglR7Fvv.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/store-DBFN5oMG.js">
-  <link rel="modulepreload" crossorigin href="/assets/cropper-Ce8lgMZu.js">
-  <link rel="stylesheet" crossorigin href="/assets/cropper-DTnpqNqg.css">
+  <script>
+    (function() {
+      try {
+        var cms = localStorage.getItem('rakit_cms');
+        if (cms) {
+          var settings = JSON.parse(cms);
+          if (settings.themeColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+            document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A');
+            document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33');
+            document.documentElement.style.setProperty('--shadow-accent', '0 8px 30px ' + settings.themeColor + '4D');
+            document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+          }
+          if (settings.fontFamily) {
+             document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/admin_manage-C4-k7FpH.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/store-DvZ6bdhr.js">
+  <link rel="modulepreload" crossorigin href="/assets/cropper-CP7VnG9h.js">
+  <link rel="stylesheet" crossorigin href="/assets/cropper-Dy6LVl56.css">
   <link rel="stylesheet" crossorigin href="/assets/design-system-CA871Xq-.css">
 </head>
 <body class="admin-body">
@@ -52,7 +76,7 @@
         <h2 style="color: white;">Kelola Menu</h2>
         <div style="display: flex; gap: 8px;">
           <button id="btn-kelola-kategori" class="btn btn-outline" style="border-color: var(--color-accent); color: var(--color-accent);">Kelola Kategori</button>
-          <button id="btn-tambah-menu" class="btn btn-primary" style="background-color: #8E6E3D;">+ Tambah Menu</button>
+          <button id="btn-tambah-menu" class="btn btn-primary">+ Tambah Menu</button>
         </div>
       </header>
       <div class="admin-content">

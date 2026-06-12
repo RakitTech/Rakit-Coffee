@@ -4,9 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rakit Coffee - KDS</title>
-  <script type="module" crossorigin src="/assets/kitchen-BYDyGitH.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/store-DBFN5oMG.js">
-  <link rel="stylesheet" crossorigin href="/assets/kitchen-COrYpAem.css">
+  <script>
+    (function() {
+      try {
+        var cms = localStorage.getItem('rakit_cms');
+        if (cms) {
+          var settings = JSON.parse(cms);
+          if (settings.themeColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+            document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A');
+            document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33');
+            document.documentElement.style.setProperty('--shadow-accent', '0 8px 30px ' + settings.themeColor + '4D');
+            document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+          }
+          if (settings.fontFamily) {
+             document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/kitchen-v8pywFip.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/store-DvZ6bdhr.js">
+  <link rel="stylesheet" crossorigin href="/assets/kitchen-CeOjIEQh.css">
 </head>
 <body class="kds-body">
   

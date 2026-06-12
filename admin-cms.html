@@ -12,6 +12,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
   <link rel="stylesheet" href="./src/css/design-system.css">
   <link rel="stylesheet" href="./src/css/admin.css">
+  <script>
+    (function() {
+      try {
+        var cms = localStorage.getItem('rakit_cms');
+        if (cms) {
+          var settings = JSON.parse(cms);
+          if (settings.themeColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+            document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A');
+            document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33');
+            document.documentElement.style.setProperty('--shadow-accent', '0 8px 30px ' + settings.themeColor + '4D');
+            document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+          }
+          if (settings.fontFamily) {
+             document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body class="admin-body">
   <aside class="admin-sidebar">
@@ -63,9 +87,15 @@
                   <option value="#AF8C53">Classic Gold (Bawaan)</option>
                   <option value="#769C8A">Sage Green</option>
                   <option value="#4A7C82">Ocean Blue</option>
+                  <option value="#1976D2">Vibrant Blue</option>
                   <option value="#A86E53">Warm Terracotta</option>
                   <option value="#D4AF37">Royal Yellow</option>
                   <option value="#805b36">Coffee Brown</option>
+                  <option value="#D32F2F">Crimson Red</option>
+                  <option value="#6A1B9A">Royal Purple</option>
+                  <option value="#F57C00">Sunset Orange</option>
+                  <option value="#212121">Elegant Black</option>
+                  <option value="#455A64">Slate Grey</option>
                 </select>
               </div>
             </div>

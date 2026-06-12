@@ -1,6 +1,7 @@
 import { Store } from './store.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await Store.applyGlobalTheme({ headerOnly: true });
   if (!Store.isAuthenticated()) {
     window.location.replace('/login.html');
     return;

@@ -7,8 +7,9 @@
 }
 
 .kds-header {
-  height: 64px;
-  background: linear-gradient(135deg, #735932 0%, #ac8d59 30%, #c8ae6a 50%, #d4ad6f 70%, #8E6E3D 100%);
+  height: var(--nav-height);
+  flex-shrink: 0;
+  background: var(--kitchen-header-bg, linear-gradient(135deg, #735932 0%, #ac8d59 30%, #c8ae6a 50%, #d4ad6f 70%, #8E6E3D 100%));
   color: var(--color-surface-lowest);
   display: flex;
   justify-content: space-between;

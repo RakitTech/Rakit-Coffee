@@ -3,6 +3,7 @@ import 'cropperjs/dist/cropper.css';
 import { Store } from './store.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await Store.applyGlobalTheme();
   // Load existing settings
   const settings = await Store.getCmsSettings();
   

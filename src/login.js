@@ -1,6 +1,7 @@
 import { Store } from './store.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await Store.applyGlobalTheme();
   // Redirect to admin if already authenticated
   if (Store.isAuthenticated()) {
     window.location.replace('/admin.html');

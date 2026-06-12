@@ -27,34 +27,7 @@ function hideLoading() {
 }
 
 async function applyCmsSettings() {
-  const settings = await Store.getCmsSettings();
-  
-  // Apply CSS Variables
-  document.documentElement.style.setProperty('--color-accent', settings.themeColor);
-  document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '15'); // 15% opacity hex
-  document.documentElement.style.setProperty('--shadow-accent', `0 8px 30px ${settings.themeColor}4D`); // 30% opacity hex
-  document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
-  
-  // Function to load Google Font dynamically
-  const loadGoogleFont = (fontString) => {
-    if (!fontString) return;
-    if (fontString.includes('Lora') || fontString.includes('Montserrat') || 
-        fontString.includes('Poppins') || fontString.includes('Oswald')) {
-      const fontName = fontString.split(',')[0].replace(/'/g, '').trim();
-      const existingLink = document.querySelector(`link[href*="${fontName.replace(/ /g, '+')}"]`);
-      if (!existingLink) {
-        const link = document.createElement('link');
-        link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
-      }
-    }
-  };
-
-  // Load necessary fonts
-  loadGoogleFont(settings.fontFamily);
-  loadGoogleFont(settings.heroTitleFont);
-  loadGoogleFont(settings.heroSubtitleFont);
+  const settings = await Store.applyGlobalTheme();
 
 
   // Apply Hero Elements

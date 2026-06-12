@@ -5,7 +5,8 @@ import { Store } from './store.js';
 let salesChartInstance = null;
 let ordersChartInstance = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await Store.applyGlobalTheme();
   if (!Store.isAuthenticated()) {
     window.location.replace('/login.html');
     return;

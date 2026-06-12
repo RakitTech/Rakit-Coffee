@@ -278,5 +278,53 @@ export const Store = {
       window.dispatchEvent(new Event('storage'));
       resolve(true);
     });
+  },
+
+  async applyGlobalTheme(options = { headerOnly: false }) {
+    const settings = await this.getCmsSettings();
+    
+    // Always set this for kitchen
+    document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+
+    if (options.headerOnly) {
+      return settings;
+    }
+
+    // Apply globally
+    document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+    document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26'); // Keep old variable name just in case
+    document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D'); // Keep old variable name
+    
+    // Exact opacity matches for smooth transitions
+    document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D'); // 5%
+    document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A'); // 10%
+    document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26'); // 15%
+    document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33'); // 20%
+    
+    document.documentElement.style.setProperty('--shadow-accent', `0 8px 30px ${settings.themeColor}4D`); // 30% opacity hex
+    document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+
+    // Function to load Google Font dynamically
+    const loadGoogleFont = (fontString) => {
+      if (!fontString) return;
+      if (fontString.includes('Lora') || fontString.includes('Montserrat') || 
+          fontString.includes('Poppins') || fontString.includes('Oswald')) {
+        const fontName = fontString.split(',')[0].replace(/'/g, '').trim();
+        const existingLink = document.querySelector(`link[href*="${fontName.replace(/ /g, '+')}"]`);
+        if (!existingLink) {
+          const link = document.createElement('link');
+          link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@400;600;700&display=swap`;
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+        }
+      }
+    };
+
+    // Load necessary fonts
+    loadGoogleFont(settings.fontFamily);
+    loadGoogleFont(settings.heroTitleFont);
+    loadGoogleFont(settings.heroSubtitleFont);
+
+    return settings;
   }
 };

@@ -13,6 +13,30 @@
   <link rel="stylesheet" href="./src/css/design-system.css">
   <link rel="stylesheet" href="./src/css/admin.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    (function() {
+      try {
+        var cms = localStorage.getItem('rakit_cms');
+        if (cms) {
+          var settings = JSON.parse(cms);
+          if (settings.themeColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+            document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A');
+            document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33');
+            document.documentElement.style.setProperty('--shadow-accent', '0 8px 30px ' + settings.themeColor + '4D');
+            document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+          }
+          if (settings.fontFamily) {
+             document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body class="admin-body">
   <aside class="admin-sidebar">
@@ -49,7 +73,7 @@
         <h2 style="color: white;">Kelola Menu</h2>
         <div style="display: flex; gap: 8px;">
           <button id="btn-kelola-kategori" class="btn btn-outline" style="border-color: var(--color-accent); color: var(--color-accent);">Kelola Kategori</button>
-          <button id="btn-tambah-menu" class="btn btn-primary" style="background-color: #8E6E3D;">+ Tambah Menu</button>
+          <button id="btn-tambah-menu" class="btn btn-primary">+ Tambah Menu</button>
         </div>
       </header>
       <div class="admin-content">
