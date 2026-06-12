@@ -1,82 +1,144 @@
-# Dokumentasi Proyek Rakit Coffee
+# Dokumentasi Serah Terima (Backend Handoff) - Rakit Coffee
 
-Proyek **Rakit Coffee** adalah sebuah aplikasi web pemesanan dan manajemen kafe/restoran (Point of Sale & Self-Order System). Aplikasi ini dibangun dengan menggunakan arsitektur Vanilla JavaScript yang modular dan Vite sebagai *build tool* serta *development server*.
+Dokumen ini disusun khusus sebagai panduan komprehensif bagi **Tim Backend** yang akan melanjutkan pengembangan proyek **Rakit Coffee**. Aplikasi ini saat ini beroperasi penuh secara fungsional di sisi *frontend* dengan menggunakan **Vanilla JavaScript** dan menyimulasikan basis data (*database*) melalui `localStorage`.
 
-## 1. Arsitektur & Teknologi Utama
-- **Frontend Core:** HTML5, CSS3 (Vanilla), JavaScript (ES6+ Modules).
-- **Bundler & Dev Server:** [Vite](https://vitejs.dev/) - Mengompilasi dan menjalankan aplikasi. `vite.config.js` diatur dengan mode *multi-page* (memiliki 3 *entry point* utama).
-- **State Management (Database Mock):** Menggunakan `localStorage` browser yang diatur oleh modul `src/store.js` untuk menyimulasikan basis data persisten. Reaktivitas antar tab (Customer, Admin, Kitchen) ditangani melalui *event listener* `storage` (`window.dispatchEvent(new Event('storage'))`).
-- **Dependencies Pihak Ketiga:**
-  - `Chart.js` (dimuat via CDN di `admin.html`) untuk menampilkan grafik penjualan dan pesanan pada halaman admin.
-  - `Cropper.js` (melalui NPM) untuk fitur pemotongan (*crop*) gambar menu pada halaman admin.
-
-## 2. Struktur Folder
-Struktur dari proyek Rakit Coffee dikelompokkan berdasarkan fungsionalitas dan peran pengguna:
-
-```text
-Rakit Coffee/
-├── .git/                  # Git repository
-├── node_modules/          # Dependencies (NPM)
-├── dist/                  # Hasil build produksi Vite
-├── src/                   # Source code JavaScript dan CSS
-│   ├── css/
-│   │   ├── design-system.css # Sistem desain utama (variabel CSS, reset, utilitas)
-│   │   ├── admin.css         # Styling khusus halaman admin
-│   │   ├── customer.css      # Styling khusus halaman customer
-│   │   └── kitchen.css       # Styling khusus halaman dapur/kitchen
-│   ├── admin.js           # Logika interaksi & fungsionalitas halaman Admin
-│   ├── customer.js        # Logika antarmuka pelanggan (Menu, Keranjang, Status)
-│   ├── kitchen.js         # Logika layar manajemen antrean dapur (Order preparation)
-│   └── store.js           # Pengelola state lokal (Mock DB via localStorage)
-├── index.html             # Entry point halaman Pelanggan (Self-Order)
-├── admin.html             # Entry point halaman Admin (Dashboard, Kelola Menu)
-├── kitchen.html           # Entry point halaman Dapur (Order Tracker)
-├── package.json           # Konfigurasi dependensi dan skrip proyek
-├── package-lock.json      # Lock file dependensi
-├── vite.config.js         # Konfigurasi bundler Vite
-└── PRD.md                 # Product Requirement Document (Dokumentasi persyaratan awal)
-```
-
-## 3. Aspek Frontend & Desain
-
-Proyek ini dibangun tanpa *framework* CSS seperti Tailwind atau Bootstrap, melainkan mendefinisikan sistem desain mandiri.
-
-### a. Sistem Desain (`design-system.css`)
-- **Variabel CSS (`:root`):** Digunakan untuk konsistensi warna (Warna primer: Dark text, Surface: Cream, Aksen: Gold/Bronze), tipografi (*Playfair Display* untuk *heading*, *Inter* untuk *body*), radius batas (border-radius), bayangan (shadows), dan spasi.
-- **Komponen Global:** Definisi class utilitas dasar seperti `.btn`, `.btn-primary`, `.btn-outline` untuk penggunaan *button* yang seragam. Serta menyertakan Google Fonts dan Material Symbols untuk iconografi.
-
-### b. Antarmuka Pelanggan (`index.html` & `customer.js` & `customer.css`)
-- Mengusung tampilan *Mobile First* yang elegan dan interaktif dengan nuansa warna kopi (Krem dan Emas/Bronze).
-- Terdapat 3 bagian/view utama: 
-  - **Menu (`#view-menu`):** Menampilkan daftar menu dengan tab navigasi kategori dinamis. Terdapat komponen *hero image*.
-  - **Keranjang (`#view-cart`):** Formulir pemesanan dengan input nama, metode pembayaran (QRIS / VA), dan total harga.
-  - **Status Pesanan (`#view-tracker`):** Memantau pesanan yang sedang aktif.
-- Interaksi menu tambahan seperti "Customization Modal" dengan fitur modifikasi kuantitas (Quantity Selector) dan catatan tambahan.
-
-### c. Antarmuka Admin (`admin.html` & `admin.js` & `admin.css`)
-- Menyajikan **Dashboard Penjualan** komprehensif dengan metrik dan grafik interaktif (menggunakan `Chart.js`). Grafik mencakup "Total Pesanan" dan "Pendapatan".
-- Memiliki filter waktu global (Harian, Bulanan, Tahunan, Rentang Waktu) untuk menyaring data riwayat.
-- **Master Data Penjualan:** Tabel rekapitulasi penjualan dengan kemampuan *sorting* dan *filtering*. Terdapat modal untuk menampilkan *detail* dari suatu transaksi.
-- **Kelola Menu:** Layar untuk operasi CRUD (Create, Read, Update, Delete) menu. Tersedia fitur pengunggahan gambar dengan fungsi *cropping* (via `Cropper.js`), harga, kategori, dan spesifikasi tambahan.
-
-### d. Antarmuka Dapur / Kitchen (`kitchen.html` & `kitchen.js` & `kitchen.css`)
-- Berfungsi sebagai *Kitchen Display System* (KDS).
-- Layar ini bertugas menerima pesanan dari pelanggan secara *real-time* (didukung oleh tab-syncing melalui *storage events* di `store.js`).
-- Petugas dapur dapat mengubah status dari setiap antrean makanan (Misal: "Diterima" -> "Dimasak" -> "Siap").
-
-## 4. Pola Aliran Data (Data Flow)
-1. **Penyimpanan:** Semua data master (Menu, Order, Kategori) disimpan dalam format JSON string di `localStorage`.
-2. **Keterhubungan:** Saat pelanggan menyelesaikan pembayaran, data disisipkan ke dalam aray orders di local storage via metode `Store.addOrder()`. 
-3. **Reaktivitas:** Pemanggilan fungsi `window.dispatchEvent(new Event('storage'))` akan memicu *event listener* pada berkas `admin.js` dan `kitchen.js` di tab peramban yang lain, sehingga UI pada halaman dapur dan admin langsung ter-*update* tanpa perlu me-*refresh* halaman.
-
-## 5. Menjalankan Aplikasi
-Aplikasi ini sudah dipasangkan dengan Vite.
-1. Instal dependensi: `npm install`
-2. Jalankan server dev: `npm run dev`
-3. Aplikasi akan melayani 3 *endpoint*:
-   - `/` atau `/index.html` (Pelanggan)
-   - `/admin.html` (Admin)
-   - `/kitchen.html` (Dapur)
+Tugas utama tim backend nantinya adalah mengganti simulasi penyimpanan lokal tersebut dengan integrasi ke **REST API sungguhan** dan **Sistem Database Relasional/NoSQL**.
 
 ---
-*Dokumentasi ini dibuat otomatis berdasarkan hasil observasi dan kode sumber yang tersedia pada repositori Rakit Coffee.*
+
+## 1. Arsitektur & Tumpukan Teknologi Saat Ini (Frontend)
+
+- **Core:** HTML5, CSS3 (Vanilla tanpa framework), JavaScript (ES6 Modules).
+- **Bundler & Dev Server:** Vite (`vite.config.js` diatur untuk mendukung *multi-page routing*).
+- **Library Tambahan:**
+  - `Chart.js` (Visualisasi data penjualan dan analitik di halaman Admin).
+  - `Cropper.js` (Fitur pemotongan gambar secara interaktif saat Admin menambahkan menu).
+- **Pusat Logika Data (State Management):** Semua aliran data (CRUD Menu, Transaksi, Pengaturan Tema) dipusatkan di dalam satu file, yaitu `src/store.js`.
+
+---
+
+## 2. Struktur Halaman & Alur Pengguna (User Flow)
+
+Sistem terdiri dari beberapa portal/halaman yang memiliki peran spesifik:
+
+1. **Halaman Pelanggan (`index.html`):** 
+   Aplikasi *Self-Order*. Pelanggan menelusuri menu, memilih variasi pesanan (*custom modifiers*), memasukkan ke keranjang, menginput nama, dan menekan checkout.
+2. **Halaman Dapur/KDS (`kitchen.html`):**
+   Layar pemantauan (Kitchen Display System) untuk para staf dapur. Menerima pesanan secara real-time, lalu mengubah status dari `Diterima` -> `Dimasak` -> `Siap`.
+3. **Portal Login (`login.html`):**
+   Halaman perlindungan untuk masuk ke dalam dasbor manajemen.
+4. **Dasbor Admin:** Terbagi menjadi 4 sub-halaman:
+   - **Dashboard Penjualan (`admin.html`):** Grafik pendapatan, rangkuman status pesanan, dan tabel riwayat transaksi (Bisa difilter berdasarkan tanggal/bulan/tahun).
+   - **Dashboard Menu (`admin-analytics.html`):** Analitik spesifik seputar performa menu (Menu terlaris, pendapatan per menu).
+   - **Kelola Menu (`admin-manage.html`):** Manajemen CRUD Kategori dan Menu. Termasuk upload gambar, penentuan harga, dan pengaturan spesifikasi kustom (Misal: ukuran, tingkat gula).
+   - **Tampilan Pelanggan/CMS (`admin-cms.html`):** Pengaturan *Content Management System*. Admin bisa mengganti warna aksen tema, jenis font (tipografi), teks hero, dan gambar hero. Perubahan ini akan langsung direfleksikan secara dinamis ke seluruh sistem.
+
+---
+
+## 3. Strategi Migrasi untuk Tim Backend
+
+Desain kode *frontend* ini sudah disiapkan dengan sangat modular untuk mempermudah pekerjaan Anda. Anda **tidak perlu mengutak-atik logika UI/HTML**. Fokus pekerjaan Anda hanya satu: **Melakukan Refactor pada file `src/store.js`**.
+
+Saat ini, `store.js` menggunakan fungsi asinkron (mengembalikan `Promise`) yang mensimulasikan jeda jaringan (via `setTimeout`) sebelum membaca/menulis ke `localStorage`. 
+**Langkah Migrasi:** Anda hanya perlu mengubah isi setiap metode di `store.js` agar menggunakan fungsi `fetch()` atau `axios` ke URL *endpoint* API yang Anda bangun. Karena arsitekturnya sudah menggunakan `async/await`, UI di frontend akan langsung otomatis menunggu *response* dari server Anda tanpa perlu modifikasi tambahan pada UI.
+
+---
+
+## 4. Skema Data (Database Schema Suggestions)
+
+Berikut adalah struktur representasi JSON yang di-*generate* oleh frontend saat ini. Anda disarankan untuk merancang tabel/koleksi database yang kompatibel dengan struktur ini.
+
+### a. Tabel Kategori (`categories`)
+```json
+[
+  { "id": "cat-1", "name": "Kopi" },
+  { "id": "cat-2", "name": "Non Kopi" }
+]
+```
+
+### b. Tabel Menu (`menu`)
+Frontend mendukung pengaturan tambahan (Modifier Groups) dinamis per menu.
+```json
+{
+  "id": "menu-uuid-1234",
+  "name": "Caramel Macchiato",
+  "category": "Kopi",
+  "price": 28000,
+  "desc": "Espresso dengan sirup karamel dan susu.",
+  "image": "https://url-ke-aws-s3-anda.com/image.jpg",
+  "isAvailable": true,
+  "modifierGroups": [
+    {
+      "name": "Pilihan Ukuran",
+      "required": true,
+      "options": [
+        { "name": "Regular", "priceDiff": 0 },
+        { "name": "Large", "priceDiff": 5000 }
+      ]
+    }
+  ]
+}
+```
+
+### c. Tabel Pesanan (`orders`)
+Pencatatan status pesanan dan detil modifikasi yang dipilih pelanggan.
+```json
+{
+  "id": "ORD-123456",
+  "customerName": "Budi",
+  "status": "Diterima", // Enum: Diterima | Dimasak | Siap
+  "timestamp": "2026-06-12T03:00:00.000Z",
+  "totalPrice": 33000,
+  "paymentMethod": "qris",
+  "items": [
+    {
+      "id": "menu-uuid-1234",
+      "name": "Caramel Macchiato",
+      "price": 28000,
+      "qty": 1,
+      "selectedModifiers": [
+        { "group": "Pilihan Ukuran", "option": "Large", "priceDiff": 5000 }
+      ],
+      "note": "Jangan terlalu manis"
+    }
+  ]
+}
+```
+
+### d. Tabel Pengaturan / CMS (`settings`)
+Ini adalah konfigurasi tema global yang memengaruhi desain CSS dan estetika aplikasi.
+```json
+{
+  "themeColor": "#AF8C53", // Warna hex yang disuntikkan langsung ke CSS Variables
+  "fontFamily": "'Playfair Display', serif",
+  "heroTitleFont": "'Playfair Display', serif",
+  "heroSubtitleFont": "'Inter', sans-serif",
+  "heroTitleColor": "#ffeec5",
+  "heroSubtitleColor": "#ffffff",
+  "heroTitle": "Rasa Otentik, \nKualitas Terbaik",
+  "heroSubtitle": "Nikmati kopi...",
+  "heroImage": "https://url-gambar-banner.com/banner.jpg"
+}
+```
+
+---
+
+## 5. Peringatan Teknis & Hal Krusial yang Harus Diselesaikan
+
+Tim Backend harus memperhatikan 3 hal fundamental berikut saat proses integrasi:
+
+### 1. Manajemen Penyimpanan Gambar (File Storage)
+**Kondisi Saat Ini:** Fitur tambah menu (dan *cropping* gambar) serta penggantian gambar Banner Hero menyimpan gambar dalam format teks panjang (**Base64 String**).
+**Tugas Backend:** Base64 sangat membebani *database* dan memperlambat muatan jaringan. Backend harus merancang sistem penerimaan *multipart/form-data*, memproses dan menyimpan file fisik tersebut ke layanan cloud (seperti Amazon S3) atau direktori lokal server, kemudian menyimpan *URL* path absolut/relatif ke dalam database untuk dikirimkan kembali ke Frontend.
+
+### 2. Socket / Real-time Event (Krusial untuk KDS Dapur)
+**Kondisi Saat Ini:** Halaman Pelanggan berkomunikasi dengan Halaman Dapur dan Admin menggunakan *listener* `window.addEventListener('storage')`. Ketika data di *localStorage* berubah, UI yang lain langsung menyesuaikan diri (simulasi sinkronisasi *real-time*).
+**Tugas Backend:** Ketika menggunakan REST API biasa, Dapur tidak akan otomatis tahu jika ada pesanan baru kecuali halamannya di-*refresh* berkala (Polling).
+**Solusi Terbaik:** Implementasikan **WebSockets (misal: Socket.io)** atau **Server-Sent Events (SSE)**. Ketika pelanggan *submit order*, Backend merespons ke API, lalu memancarkan *event* (emit/broadcast) via socket kepada seluruh *client* ber-opsi *kitchen*. Di frontend (`kitchen.js`), Anda bisa mendengarkan event socket tersebut untuk langsung memanggil `Store.getOrders()` dan memperbarui layar tanpa jeda.
+
+### 3. Otentikasi Lanjutan (Security/Auth)
+**Kondisi Saat Ini:** Fitur login di `login.js` dan perlindungan halaman admin saat ini hanya didasarkan pada flag *boolean* sederhana (`auth_status: true`) di `localStorage`.
+**Tugas Backend:** Bangun sistem **JWT (JSON Web Token)** atau sesi berbasis *cookie*. Setelah berhasil melakukan login melalui API `/api/login`, simpan token di klien. Pastikan semua *fetch request* ke API manajemen (Dashboard, Kelola Menu, CMS, dan Order Mutation) menyertakan *header* otorisasi (`Authorization: Bearer <token>`). Ini vital agar sembarang orang tidak dapat mengirim HTTP *request* untuk merusak menu dari luar aplikasi.
+
+---
+*Dokumentasi ini disiapkan untuk memastikan serah terima proyek berjalan tanpa friksi. Semoga sukses menyambungkan sisi belakang sistem ini!*
