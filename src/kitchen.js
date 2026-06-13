@@ -59,6 +59,9 @@ async function renderBoard() {
   const now = Date.now();
 
   orders.forEach(order => {
+    // Hanya tampilkan pesanan yang sudah lunas dibayar
+    if (order.paymentStatus !== 'Lunas') return;
+
     order.items.forEach(item => {
       // Compatibility with old orders that might not have item.status
       const itemStatus = item.status || 'Diterima';

@@ -204,6 +204,20 @@ export const Store = {
     }
   },
 
+  async updateOrderPayment(orderId, paymentStatus, paymentMethod) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/orders/${orderId}/payment`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+        body: JSON.stringify({ paymentStatus, paymentMethod })
+      });
+      if (!res.ok) throw new Error('Failed to update order payment status');
+      triggerSync();
+    } catch (err) {
+      console.error('[Store.updateOrderPayment]', err);
+    }
+  },
+
   // Helper listener sinkronisasi tab
   subscribe(callback) {
     window.addEventListener('storage', callback);

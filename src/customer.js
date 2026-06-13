@@ -58,6 +58,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCartUI();
   updateTrackerStatus();
 
+  // Membaca nomor meja dinamis dari URL query (?table=X atau ?meja=X)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableNum = urlParams.get('table') || urlParams.get('meja') || '12';
+  const tableBadge = document.querySelector('.table-badge .text-label');
+  if (tableBadge) {
+    tableBadge.textContent = `MEJA ${tableNum}`;
+  }
+
   // Scroll Spy for Category Tabs
   window.addEventListener('scroll', () => {
     if (typeof isClickScrolling !== 'undefined' && isClickScrolling) return;
@@ -633,25 +641,123 @@ window.processCheckout = async function() {
   showLoading('Memproses pesanan Anda...');
   const total = cart.reduce((sum, item) => sum + ((item.price + (item.modifierTotal || 0)) * item.qty), 0);
   
+  // Baca nomor meja dinamis
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableNum = urlParams.get('table') || urlParams.get('meja') || '12';
+
+  // Baca metode pembayaran terpilih
+  const paymentMethodInput = document.querySelector('input[name="payment-method"]:checked');
+  const paymentMethod = paymentMethodInput ? paymentMethodInput.value : 'qris';
+
   const order = await Store.addOrder({
     customerName: nameInput,
     items: [...cart],
     total: total,
-    table: '12' // Hardcoded for prototype
+    table: tableNum,
+    paymentMethod: paymentMethod.toUpperCase(),
+    paymentStatus: 'Belum Bayar'
   });
   
   hideLoading();
-  myOrderIds.push(order.id);
-  cart = []; // Empty cart
-  updateCartUI();
-  renderMenu();
-  
-  alert('Pembayaran Berhasil! Pesanan sedang diproses.');
-  
-  // Navigate to tracker
-  document.querySelector('.nav-item[href="#view-tracker"]').click();
-  updateTrackerStatus();
+  showPaymentSimulationModal(order, paymentMethod);
 };
+
+function showPaymentSimulationModal(order, paymentMethod) {
+  const modalDiv = document.createElement('div');
+  modalDiv.id = 'payment-simulation-modal';
+  modalDiv.style = `
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.95);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 99999; backdrop-filter: blur(12px);
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    color: #fff; padding: var(--space-md);
+  `;
+
+  const formattedTotal = `Rp ${order.total.toLocaleString('id-ID')}`;
+  
+  modalDiv.innerHTML = `
+    <div style="
+      background: #1e293b;
+      padding: 32px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    ">
+      <div style="font-size: 14px; color: var(--color-accent, #e2e8f0); font-weight: bold; text-transform: uppercase; margin-bottom: 8px;">
+        Rakit Coffee Payment
+      </div>
+      <h3 style="font-size: 22px; margin-bottom: 16px; font-family: var(--font-heading, sans-serif); color: #fff;">
+        Selesaikan Pembayaran
+      </h3>
+      
+      <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+        <span style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">TOTAL TAGIHAN</span>
+        <span style="font-size: 24px; font-weight: 700; color: #f8fafc;">${formattedTotal}</span>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+          Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
+        </p>
+        <!-- Mock QR Code SVG -->
+        <div style="background: white; padding: 16px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges">
+            <path fill="#ffffff" d="M0 0h29v29H0z"/>
+            <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button id="btn-simulate-pay" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600;">
+          Simulasi Bayar Sukses
+        </button>
+        <button id="btn-cancel-pay" class="btn btn-outline" style="width: 100%; padding: 12px; color: #cbd5e1; border-color: #475569; background: transparent;">
+          Batalkan Pembayaran
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalDiv);
+
+  // Event handler for simulate successful payment
+  document.getElementById('btn-simulate-pay').onclick = async () => {
+    modalDiv.querySelector('#btn-simulate-pay').disabled = true;
+    modalDiv.querySelector('#btn-simulate-pay').textContent = 'Memproses...';
+    try {
+      await Store.updateOrderPayment(order.id, 'Lunas', paymentMethod.toUpperCase());
+      alert('Pembayaran Berhasil! Pesanan Anda telah diteruskan ke dapur.');
+      
+      // Kosongkan keranjang HANYA setelah pembayaran berhasil
+      myOrderIds.push(order.id);
+      cart = []; // Empty cart
+      updateCartUI();
+      renderMenu();
+      
+      modalDiv.remove();
+      // Navigate to tracker
+      document.querySelector('.nav-item[href="#view-tracker"]').click();
+      updateTrackerStatus();
+    } catch (e) {
+      alert('Gagal memproses pembayaran.');
+      modalDiv.querySelector('#btn-simulate-pay').disabled = false;
+      modalDiv.querySelector('#btn-simulate-pay').textContent = 'Simulasi Bayar Sukses';
+    }
+  };
+
+  // Event handler untuk membatalkan pembayaran
+  document.getElementById('btn-cancel-pay').onclick = () => {
+    if (confirm('Apakah Anda yakin ingin membatalkan pembayaran? Keranjang belanja Anda akan tetap disimpan.')) {
+      modalDiv.remove();
+    }
+  };
+}
 
 async function updateTrackerStatus() {
   const emptyState = document.getElementById('tracker-empty-state');

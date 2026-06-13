@@ -346,9 +346,9 @@ async function renderDashboard() {
   
   // Calculate metrics
   const totalOrders = globalFilteredOrders.length;
-  // Pendapatan hanya menghitung status "Siap"
+  // Pendapatan menghitung status pembayaran "Lunas"
   const totalRevenue = globalFilteredOrders
-    .filter(o => o.status === 'Siap')
+    .filter(o => o.paymentStatus === 'Lunas')
     .reduce((sum, order) => sum + order.total, 0);
   
   const metricOrders = document.getElementById('metric-orders');
@@ -730,7 +730,7 @@ async function renderSalesTable(baseOrders) {
   tbody.innerHTML = '';
 
   if (filteredOrders.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px;">Tidak ada data penjualan.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 24px;">Tidak ada data penjualan.</td></tr>';
     return;
   }
 
@@ -746,6 +746,10 @@ async function renderSalesTable(baseOrders) {
     else if (order.status === 'Dimasak') statusStyle = 'color: var(--color-accent); font-weight: 600;';
     else if (order.status === 'Siap') statusStyle = 'color: var(--color-success); font-weight: 600;';
 
+    let paymentStatusStyle = '';
+    if (order.paymentStatus === 'Belum Bayar') paymentStatusStyle = 'color: var(--color-error); font-weight: 600;';
+    else if (order.paymentStatus === 'Lunas') paymentStatusStyle = 'color: var(--color-success); font-weight: 600;';
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${orderNumber}</td>
@@ -755,6 +759,7 @@ async function renderSalesTable(baseOrders) {
       <td style="font-weight: 600;">${order.customerName}</td>
       <td>Meja ${order.table}</td>
       <td style="font-weight: 600;">Rp ${order.total.toLocaleString('id-ID')}</td>
+      <td style="${paymentStatusStyle}">${order.paymentStatus || 'Belum Bayar'}</td>
       <td style="${statusStyle}">${order.status}</td>
       <td>
         <button class="btn btn-outline" style="padding: 4px 12px; font-size: 12px;" onclick="viewOrderDetails('${order.id}', event)">Detail</button>
@@ -782,6 +787,23 @@ window.viewOrderDetails = async function(orderId, event) {
   document.getElementById('modal-customer-name').textContent = order.customerName;
   document.getElementById('modal-table-num').textContent = order.table;
   document.getElementById('modal-order-total').textContent = `Rp ${order.total.toLocaleString('id-ID')}`;
+
+  // Populate detail pembayaran
+  document.getElementById('modal-payment-method').textContent = order.paymentMethod || 'QRIS';
+  
+  const paymentStatusEl = document.getElementById('modal-payment-status');
+  paymentStatusEl.textContent = order.paymentStatus || 'Belum Bayar';
+  if (order.paymentStatus === 'Lunas') {
+    paymentStatusEl.style.color = 'var(--color-success)';
+  } else {
+    paymentStatusEl.style.color = 'var(--color-error)';
+  }
+
+  // Populate tombol aksi pembayaran (tidak diperlukan tombol konfirmasi manual kasir karena fully-online/by-system)
+  const actionContainer = document.getElementById('modal-payment-action-container');
+  if (actionContainer) {
+    actionContainer.innerHTML = '';
+  }
 
   const itemsContainer = document.getElementById('modal-order-items');
   itemsContainer.innerHTML = '';

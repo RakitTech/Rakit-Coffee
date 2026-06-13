@@ -38,14 +38,16 @@ model Category {
 // TABEL: orders — Header Pesanan
 // ============================================================
 model Order {
-  id           String      @id @db.VarChar(20)
-  customerName String      @map("customer_name") @db.VarChar(100)
-  table        String      @db.VarChar(20)
-  total        Int
-  status       String      @default("Diterima") @db.VarChar(50) // Diterima, Dimasak, Siap
-  timestamp    DateTime    @default(now())
-  completedAt  DateTime?   @map("completed_at")
-  items        OrderItem[]
+  id            String      @id @db.VarChar(20)
+  customerName  String      @map("customer_name") @db.VarChar(100)
+  table         String      @db.VarChar(20)
+  total         Int
+  status        String      @default("Diterima") @db.VarChar(50) // Diterima, Dimasak, Siap
+  paymentStatus String      @default("Belum Bayar") @map("payment_status") @db.VarChar(50) // Belum Bayar, Lunas
+  paymentMethod String      @default("QRIS") @map("payment_method") @db.VarChar(50) // QRIS, VA, Cash
+  timestamp     DateTime    @default(now())
+  completedAt   DateTime?   @map("completed_at")
+  items         OrderItem[]
 
   @@map("orders")
 }

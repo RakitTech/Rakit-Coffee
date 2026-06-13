@@ -31,6 +31,8 @@ router.get('/', async (req, res) => {
       table: o.table,
       total: o.total,
       status: o.status,
+      paymentStatus: o.paymentStatus || 'Belum Bayar',
+      paymentMethod: o.paymentMethod || 'QRIS',
       timestamp: o.timestamp.toISOString(),
       completedAt: o.completedAt ? o.completedAt.toISOString() : null,
       items: o.items.map((i) => ({
@@ -101,6 +103,8 @@ router.post('/', async (req, res) => {
         table: orderData.table || '12',
         total: calculatedTotal,
         status: 'Diterima',
+        paymentStatus: orderData.paymentStatus || 'Belum Bayar',
+        paymentMethod: orderData.paymentMethod || 'QRIS',
         items: {
           create: itemsToCreate,
         },
@@ -117,6 +121,8 @@ router.post('/', async (req, res) => {
       table: newOrder.table,
       total: newOrder.total,
       status: newOrder.status,
+      paymentStatus: newOrder.paymentStatus,
+      paymentMethod: newOrder.paymentMethod,
       timestamp: newOrder.timestamp.toISOString(),
       completedAt: null,
       items: newOrder.items.map((i) => ({
@@ -231,6 +237,35 @@ router.patch('/:orderId/items/:itemId/status', async (req, res) => {
   } catch (error) {
     console.error('[PATCH /orders/:orderId/items/:itemId/status]', error);
     res.status(500).json({ error: 'Gagal memperbarui status item.' });
+  }
+});
+
+// ============================================================
+// PATCH /api/orders/:id/payment
+// Update status pembayaran pesanan (Belum Bayar -> Lunas)
+// ============================================================
+router.patch('/:id/payment', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paymentStatus, paymentMethod } = req.body;
+
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Pesanan tidak ditemukan.' });
+    }
+
+    const updated = await prisma.order.update({
+      where: { id },
+      data: {
+        paymentStatus: paymentStatus || 'Lunas',
+        paymentMethod: paymentMethod || existing.paymentMethod,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('[PATCH /orders/:id/payment]', error);
+    res.status(500).json({ error: 'Gagal memperbarui status pembayaran.' });
   }
 });
 
