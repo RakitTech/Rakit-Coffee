@@ -90,3 +90,4 @@ model CmsSetting {
 
   @@map("cms_settings")
 }
+
