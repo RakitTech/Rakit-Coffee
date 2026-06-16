@@ -877,6 +877,60 @@ document.addEventListener('DOMContentLoaded', async () => {
       salesCatFilter.appendChild(opt);
     });
   }
+
+  // Manage Category Custom Select
+  const manageCatWrapper = document.getElementById('manage-category-custom-select');
+  const manageCatTrigger = document.getElementById('manage-category-trigger');
+  const manageCatDropdown = document.getElementById('manage-category-dropdown');
+  const manageCatInput = document.getElementById('manage-filter-category');
+  const manageCatTriggerText = document.getElementById('manage-category-trigger-text');
+
+  if (manageCatTrigger && manageCatDropdown) {
+    manageCatTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      manageCatWrapper.classList.toggle('open');
+    });
+
+    const populateManageCategories = (cats) => {
+      const allOptions = [
+        { value: 'ALL', label: 'Semua Kategori' },
+        ...cats.map(cat => ({ value: cat, label: cat }))
+      ];
+
+      manageCatDropdown.innerHTML = allOptions.map(opt => `
+        <div class="custom-select-option ${manageCatInput.value === opt.value ? 'selected' : ''}" data-value="${opt.value}">${opt.label}</div>
+      `).join('');
+
+      Array.from(manageCatDropdown.children).forEach(optEl => {
+        optEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = optEl.getAttribute('data-value');
+          manageCatInput.value = val;
+          manageCatTriggerText.textContent = optEl.textContent;
+          manageCatWrapper.classList.remove('open');
+          
+          Array.from(manageCatDropdown.children).forEach(el => el.classList.remove('selected'));
+          optEl.classList.add('selected');
+          
+          renderMenuTable();
+        });
+      });
+    };
+
+    populateManageCategories(categories);
+
+    Store.subscribe(async () => {
+      const updatedMenus = await Store.getMenu();
+      const updatedCategories = [...new Set(updatedMenus.map(m => m.category))];
+      populateManageCategories(updatedCategories);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (manageCatWrapper && !manageCatWrapper.contains(e.target)) {
+        manageCatWrapper.classList.remove('open');
+      }
+    });
+  }
 });
 
 async function renderMenuTable() {
@@ -884,9 +938,14 @@ async function renderMenuTable() {
   const searchInput = document.getElementById('manage-menu-search');
   const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
   
-  const filteredMenus = menus.filter(item => 
-    item.name.toLowerCase().includes(searchTerm)
-  );
+  const categoryFilter = document.getElementById('manage-filter-category');
+  const selectedCategory = categoryFilter ? categoryFilter.value : 'ALL';
+  
+  const filteredMenus = menus.filter(item => {
+    const matchSearch = item.name.toLowerCase().includes(searchTerm);
+    const matchCategory = selectedCategory === 'ALL' || item.category === selectedCategory;
+    return matchSearch && matchCategory;
+  });
 
   const tbody = document.getElementById('menu-table-body');
   if(!tbody) return;
@@ -979,37 +1038,26 @@ function updateSortIcons(containerSelector, state) {
 // MODIFIER GROUPS BUILDER HELPERS
 // =======================
 
-function createModifierOptionRowHTML(name = '', price = 0, stockItemId = '', stockQty = 0) {
-  const stockOptions = globalStockItems.map(item => `<option value="${item.id}" ${item.id === stockItemId ? 'selected' : ''}>${item.name} (${item.unit})</option>`).join('');
-
+function createModifierOptionRowHTML(name = '', price = 0) {
   return `
-    <div class="modifier-option-row" style="flex-wrap: wrap; margin-bottom: 12px; background: var(--color-surface); padding: 8px; border-radius: 4px; border: 1px solid var(--color-surface-variant);">
-      <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-        <span class="material-symbols-outlined drag-handle" style="cursor: move;">drag_indicator</span>
-        <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}" style="flex: 1;">
-        <div class="price-input-wrapper">
-          <span class="price-prefix">+Rp</span>
-          <input type="text" inputmode="numeric" class="filter-modern option-price-input price-format" placeholder="0" required value="${price ? parseInt(price).toLocaleString('id-ID') : ''}">
-        </div>
-        <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
-          <span class="material-symbols-outlined">close</span>
-        </button>
+    <div class="modifier-option-row" style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px; background: var(--color-surface); padding: 8px; border-radius: 4px; border: 1px solid var(--color-surface-variant); width: 100%;">
+      <span class="material-symbols-outlined drag-handle" style="cursor: move;">drag_indicator</span>
+      <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}" style="flex: 1;">
+      <div class="price-input-wrapper">
+        <span class="price-prefix">+Rp</span>
+        <input type="text" inputmode="numeric" class="filter-modern option-price-input price-format" placeholder="0" required value="${price ? parseInt(price).toLocaleString('id-ID') : ''}">
       </div>
-      <div style="display: flex; gap: 8px; margin-left: 32px; margin-top: 8px; width: calc(100% - 32px);">
-        <select class="filter-modern option-stock-id" style="flex: 1; padding: 4px; font-size: 12px;">
-          <option value="">-- Tidak Terhubung Stok --</option>
-          ${stockOptions}
-        </select>
-        <input type="number" step="0.01" class="filter-modern option-stock-qty" placeholder="Potong Stok (Qty)" value="${stockQty || ''}" style="width: 150px; padding: 4px; font-size: 12px;">
-      </div>
+      <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
   `;
 }
 
 function createModifierGroupCardHTML(groupId, group = { name: '', type: 'single', options: [] }) {
   const optionsHtml = (group.options && group.options.length > 0)
-    ? group.options.map(opt => createModifierOptionRowHTML(opt.name, opt.priceAdd, opt.stockItemId, opt.stockQty)).join('')
-    : createModifierOptionRowHTML('', 0, '', 0);
+    ? group.options.map(opt => createModifierOptionRowHTML(opt.name, opt.priceAdd)).join('')
+    : createModifierOptionRowHTML('', 0);
 
   return `
     <div class="modifier-group-card animate-slide-up" id="${groupId}">
@@ -1090,7 +1138,7 @@ function setupModifierFormEvents(containerId) {
       const card = btnAddOption.closest('.modifier-group-card');
       const optionsContainer = card.querySelector('.modifier-options-container');
       if (optionsContainer) {
-        const rowHtml = createModifierOptionRowHTML('', 0, '', 0);
+        const rowHtml = createModifierOptionRowHTML('', 0);
         optionsContainer.insertAdjacentHTML('beforeend', rowHtml);
       }
       return;
@@ -1143,21 +1191,15 @@ function collectModifierGroups(containerId) {
     card.querySelectorAll('.modifier-option-row').forEach(row => {
       const optNameInput = row.querySelector('.option-name-input');
       const optPriceInput = row.querySelector('.option-price-input');
-      const optStockIdInput = row.querySelector('.option-stock-id');
-      const optStockQtyInput = row.querySelector('.option-stock-qty');
 
       if (optNameInput && optPriceInput) {
         const optName = optNameInput.value.trim();
         const optPrice = parseInt(optPriceInput.value.replace(/\D/g, '')) || 0;
-        const stockItemId = optStockIdInput ? optStockIdInput.value : '';
-        const stockQty = optStockQtyInput ? parseFloat(optStockQtyInput.value) || 0 : 0;
 
         if (optName) {
           options.push({ 
             name: optName, 
-            priceAdd: optPrice,
-            stockItemId: stockItemId,
-            stockQty: stockQty
+            priceAdd: optPrice
           });
         }
       }
@@ -1208,8 +1250,19 @@ window.openEditMenu = async function(id) {
     console.error('Failed to load recipes', e);
   }
 
-  window.currentBaseRecipesEdit = recipes || [];
-  renderBaseRecipeEdit();
+  const trackStockCheckbox = document.getElementById('edit-menu-track-stock');
+  const minStockWrapper = document.getElementById('edit-menu-min-stock-wrapper');
+  const minStockInput = document.getElementById('edit-menu-min-stock');
+
+  if (recipes.length > 0) {
+    trackStockCheckbox.checked = true;
+    minStockWrapper.style.display = 'flex';
+    minStockInput.value = recipes[0].stockItem ? recipes[0].stockItem.minQty : 0;
+  } else {
+    trackStockCheckbox.checked = false;
+    minStockWrapper.style.display = 'none';
+    minStockInput.value = 0;
+  }
 
   const container = document.getElementById('modifier-groups-container-edit');
   if (container) {
@@ -1541,67 +1594,22 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   };
 
-  window.updateBaseRecipe = function(index, field, value) {
-    if (field === 'id') currentBaseRecipes[index].stockItemId = value;
-    if (field === 'qty') currentBaseRecipes[index].qty = parseFloat(value) || 0;
-  };
-
-  window.removeBaseRecipe = function(index) {
-    currentBaseRecipes.splice(index, 1);
-    renderBaseRecipeAdd();
-  };
-
-  const btnAddBaseRecipe = document.getElementById('btn-add-base-recipe');
-  if (btnAddBaseRecipe) {
-    btnAddBaseRecipe.addEventListener('click', () => {
-      currentBaseRecipes.push({ stockItemId: '', qty: '' });
-      renderBaseRecipeAdd();
-    });
-  }
-
-  window.currentBaseRecipesEdit = [];
-  window.renderBaseRecipeEdit = function() {
-    const container = document.getElementById('base-recipe-container-edit');
-    if (!container) return;
-    if (currentBaseRecipesEdit.length === 0) {
-      container.innerHTML = `
-        <div class="modifier-empty-state" style="padding: 16px;">
-          <p>Belum ada bahan baku ditambahkan.</p>
-        </div>`;
-      return;
+  // Toggle min stock input wrappers based on track stock checkbox
+  const addTrackStockCheckbox = document.getElementById('add-menu-track-stock');
+  const addMinStockWrapper = document.getElementById('add-menu-min-stock-wrapper');
+  addTrackStockCheckbox?.addEventListener('change', () => {
+    if (addMinStockWrapper) {
+      addMinStockWrapper.style.display = addTrackStockCheckbox.checked ? 'flex' : 'none';
     }
-    
-    container.innerHTML = currentBaseRecipesEdit.map((recipe, index) => `
-      <div style="display: flex; gap: 8px; align-items: center; background: var(--color-surface); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
-        <select class="filter-modern base-recipe-stock-id" style="flex: 2; padding: 6px;" onchange="updateBaseRecipeEdit(${index}, 'id', this.value)" required>
-          <option value="">-- Pilih Bahan --</option>
-          ${globalStockItems.map(item => `<option value="${item.id}" ${item.id === recipe.stockItemId ? 'selected' : ''}>${item.name} (${item.unit})</option>`).join('')}
-        </select>
-        <input type="number" class="filter-modern base-recipe-qty" placeholder="Qty" style="flex: 1; padding: 6px;" value="${recipe.qty || ''}" onchange="updateBaseRecipeEdit(${index}, 'qty', this.value)" required min="0.01" step="0.01">
-        <button type="button" class="btn-icon" style="color: var(--color-error);" onclick="removeBaseRecipeEdit(${index})">
-          <span class="material-symbols-outlined">delete</span>
-        </button>
-      </div>
-    `).join('');
-  };
+  });
 
-  window.updateBaseRecipeEdit = function(index, field, value) {
-    if (field === 'id') currentBaseRecipesEdit[index].stockItemId = value;
-    if (field === 'qty') currentBaseRecipesEdit[index].qty = parseFloat(value) || 0;
-  };
-
-  window.removeBaseRecipeEdit = function(index) {
-    currentBaseRecipesEdit.splice(index, 1);
-    renderBaseRecipeEdit();
-  };
-
-  const btnAddBaseRecipeEdit = document.getElementById('btn-add-base-recipe-edit');
-  if (btnAddBaseRecipeEdit) {
-    btnAddBaseRecipeEdit.addEventListener('click', () => {
-      currentBaseRecipesEdit.push({ stockItemId: '', qty: '' });
-      renderBaseRecipeEdit();
-    });
-  }
+  const editTrackStockCheckbox = document.getElementById('edit-menu-track-stock');
+  const editMinStockWrapper = document.getElementById('edit-menu-min-stock-wrapper');
+  editTrackStockCheckbox?.addEventListener('change', () => {
+    if (editMinStockWrapper) {
+      editMinStockWrapper.style.display = editTrackStockCheckbox.checked ? 'flex' : 'none';
+    }
+  });
 
   // Setup modifier form add/edit button clicks & delegation events
   const btnAddGroupAdd = document.getElementById('btn-add-modifier-group-add');
@@ -1633,18 +1641,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
 
       const modifierGroups = collectModifierGroups('modifier-groups-container-add');
-
-      let validRecipes = true;
-      for (const br of currentBaseRecipes) {
-        if (!br.stockItemId || !br.qty) {
-          validRecipes = false;
-          break;
-        }
-      }
-      if (!validRecipes) {
-        alert('Pastikan semua baris bahan utama terisi lengkap atau hapus baris yang tidak dipakai.');
-        return;
-      }
+      const trackStock = document.getElementById('add-menu-track-stock')?.checked || false;
+      const minStock = parseInt(document.getElementById('add-menu-min-stock')?.value) || 0;
 
       const id = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 10) + '_' + Date.now().toString().slice(-4);
 
@@ -1657,7 +1655,8 @@ document.addEventListener('DOMContentLoaded', () => {
         image: img,
         modifierGroups: modifierGroups,
         available: true,
-        recipes: currentBaseRecipes
+        trackStock: trackStock,
+        minStock: minStock
       });
 
       const categories = await Store.getCategories();
@@ -1669,6 +1668,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Menu berhasil ditambahkan!');
       addForm.reset();
       imgPreview.style.display = 'none';
+      if (addMinStockWrapper) addMinStockWrapper.style.display = 'none';
       
       const containerAdd = document.getElementById('modifier-groups-container-add');
       if (containerAdd) {
@@ -1693,20 +1693,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const desc = document.getElementById('edit-menu-desc').value.trim();
       
       const modifierGroups = collectModifierGroups('modifier-groups-container-edit');
+      const trackStock = document.getElementById('edit-menu-track-stock')?.checked || false;
+      const minStock = parseInt(document.getElementById('edit-menu-min-stock')?.value) || 0;
       
-      let validRecipes = true;
-      for (const br of currentBaseRecipesEdit) {
-        if (!br.stockItemId || !br.qty) {
-          validRecipes = false;
-          break;
-        }
-      }
-      if (!validRecipes) {
-        alert('Pastikan semua baris bahan utama terisi lengkap atau hapus baris yang tidak dipakai.');
-        return;
-      }
-      
-      const updateData = { name, category, price, desc, modifierGroups, recipes: currentBaseRecipesEdit };
+      const updateData = { name, category, price, desc, modifierGroups, trackStock, minStock };
       
       const imgPreview = document.getElementById('edit-menu-preview');
       if (imgPreview.style.display === 'block') {

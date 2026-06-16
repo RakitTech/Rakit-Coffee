@@ -71,8 +71,12 @@
 
 .admin-content {
   flex-grow: 1;
-  padding: var(--space-xl);
+  padding: 0 var(--space-xl) var(--space-xl) var(--space-xl);
   overflow-y: auto;
+}
+
+.admin-content > *:first-child {
+  margin-top: var(--space-xl);
 }
 
 .admin-view {

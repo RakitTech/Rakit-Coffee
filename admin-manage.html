@@ -84,7 +84,17 @@
         <div class="section-block">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
             <h3 style="margin: 0;">Daftar Menu Tersedia</h3>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <div class="custom-select-wrapper" id="manage-category-custom-select" style="width: 180px;">
+                <div class="custom-select-trigger" id="manage-category-trigger" style="background-color: var(--color-surface); border: 1px solid var(--color-surface-variant);">
+                  <span id="manage-category-trigger-text">Semua Kategori</span>
+                  <span class="material-symbols-outlined" style="color: var(--color-text-muted); font-size: 18px;">expand_more</span>
+                </div>
+                <div class="custom-select-dropdown" id="manage-category-dropdown" style="max-height: 250px; overflow-y: auto; width: 100%;">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <input type="hidden" id="manage-filter-category" value="ALL">
               <input type="text" id="manage-menu-search" class="filter-modern" placeholder="Cari Nama Menu..." style="width: 240px; border: 1px solid var(--color-surface-variant);">
             </div>
           </div>
@@ -179,19 +189,17 @@
               <img id="add-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
             </div>
 
-            <!-- Base Recipe (Wajib) -->
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label style="font-weight: 600; font-size: 14px;">Kebutuhan Bahan Utama <span style="color: var(--color-error);">*</span></label>
-                <button type="button" id="btn-add-base-recipe" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Bahan
-                </button>
+            <!-- Lacak Stok Menu -->
+            <div style="display: flex; flex-direction: column; gap: 8px; background: var(--color-surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="add-menu-track-stock" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="add-menu-track-stock" style="font-weight: 600; font-size: 14px; cursor: pointer; user-select: none;">Lacak Stok Menu Ini</label>
               </div>
-              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Pilih bahan baku wajib untuk menu ini. (Tidak bisa diubah setelah menu dibuat)</p>
-              <div id="base-recipe-container-add" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                <div class="modifier-empty-state" style="padding: 16px;">
-                  <p>Belum ada bahan baku ditambahkan.</p>
-                </div>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0; margin-left: 28px;">Aktifkan jika ingin membatasi ketersediaan menu berdasarkan jumlah stok fisik produk.</p>
+              <div id="add-menu-min-stock-wrapper" style="display: none; flex-direction: column; gap: 8px; margin-left: 28px; margin-top: 8px;">
+                <label for="add-menu-min-stock" style="font-weight: 600; font-size: 13px;">Batas Minimum Stok <span style="color: var(--color-error);">*</span></label>
+                <input type="number" id="add-menu-min-stock" class="filter-modern" value="0" min="0" style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 8px; border-radius: var(--radius-md);">
+                <p style="font-size: 11px; color: var(--color-text-muted); margin: 0;">Sistem akan memberi peringatan jika stok berada di bawah batas ini.</p>
               </div>
             </div>
 
@@ -254,17 +262,17 @@
               <img id="edit-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
             </div>
 
-            <!-- Base Recipe (Edit) -->
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <label style="font-weight: 600; font-size: 14px;">Kebutuhan Bahan Utama</label>
-                <button type="button" id="btn-add-base-recipe-edit" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Bahan
-                </button>
+            <!-- Lacak Stok Menu -->
+            <div style="display: flex; flex-direction: column; gap: 8px; background: var(--color-surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="edit-menu-track-stock" style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="edit-menu-track-stock" style="font-weight: 600; font-size: 14px; cursor: pointer; user-select: none;">Lacak Stok Menu Ini</label>
               </div>
-              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Pilih bahan baku wajib untuk menu ini. (Opsional)</p>
-              <div id="base-recipe-container-edit" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-                <!-- Diisi lewat JS -->
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0; margin-left: 28px;">Aktifkan jika ingin membatasi ketersediaan menu berdasarkan jumlah stok fisik produk.</p>
+              <div id="edit-menu-min-stock-wrapper" style="display: none; flex-direction: column; gap: 8px; margin-left: 28px; margin-top: 8px;">
+                <label for="edit-menu-min-stock" style="font-weight: 600; font-size: 13px;">Batas Minimum Stok <span style="color: var(--color-error);">*</span></label>
+                <input type="number" id="edit-menu-min-stock" class="filter-modern" value="0" min="0" style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 8px; border-radius: var(--radius-md);">
+                <p style="font-size: 11px; color: var(--color-text-muted); margin: 0;">Sistem akan memberi peringatan jika stok berada di bawah batas ini.</p>
               </div>
             </div>
 

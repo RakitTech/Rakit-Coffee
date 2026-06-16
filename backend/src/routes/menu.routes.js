@@ -85,18 +85,31 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// ============================================================
-// POST /api/menus
 // Tambah menu baru
 // ============================================================
 router.post('/', async (req, res) => {
   try {
-    const { id, name, category, desc, price, image, available = true, modifierGroups = [], recipes = [] } = req.body;
+    const { id, name, category, desc, price, image, available = true, modifierGroups = [], trackStock = false, minStock = 0 } = req.body;
 
     if (!id || !name || !category || price === undefined) {
       return res.status(400).json({
         error: 'Field id, name, category, dan price wajib diisi.',
       });
+    }
+
+    if (trackStock) {
+      const existingStock = await prisma.stockItem.findUnique({ where: { id } });
+      if (!existingStock) {
+        await prisma.stockItem.create({
+          data: {
+            id,
+            name,
+            unit: 'porsi',
+            qty: 10, // default stock on creation
+            minQty: parseFloat(minStock) || 0
+          }
+        });
+      }
     }
 
     const newMenu = await prisma.menu.create({
@@ -109,8 +122,8 @@ router.post('/', async (req, res) => {
         image: image || null,
         available: Boolean(available),
         modifierGroups: modifierGroups || [],
-        recipes: recipes.length > 0 ? {
-          create: recipes.map(r => ({ stockItemId: r.stockItemId, qty: parseFloat(r.qty) }))
+        recipes: trackStock ? {
+          create: [{ stockItemId: id, qty: 1 }]
         } : undefined
       },
       include: { recipes: true }
@@ -130,11 +143,50 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, desc, price, image, available, modifierGroups, recipes } = req.body;
+    const { name, category, desc, price, image, available, modifierGroups, trackStock, minStock } = req.body;
 
     const existing = await prisma.menu.findUnique({ where: { id } });
     if (!existing) {
       return res.status(404).json({ error: 'Menu tidak ditemukan.' });
+    }
+
+    // Sync nama ke StockItem jika ada
+    if (name !== undefined) {
+      const stockExist = await prisma.stockItem.findUnique({ where: { id } });
+      if (stockExist) {
+        await prisma.stockItem.update({
+          where: { id },
+          data: { name }
+        });
+      }
+    }
+
+    if (trackStock !== undefined) {
+      if (trackStock) {
+        // Pastikan StockItem ada
+        let stockItem = await prisma.stockItem.findUnique({ where: { id } });
+        if (!stockItem) {
+          await prisma.stockItem.create({
+            data: {
+              id,
+              name: name || existing.name,
+              unit: 'porsi',
+              qty: 10,
+              minQty: parseFloat(minStock) || 0
+            }
+          });
+        } else if (minStock !== undefined) {
+          await prisma.stockItem.update({
+            where: { id },
+            data: { minQty: parseFloat(minStock) || 0 }
+          });
+        }
+      } else {
+        // Hapus mapping stock jika dinonaktifkan
+        await prisma.menuRecipe.deleteMany({ where: { menuId: id } });
+        await prisma.stockTransaction.deleteMany({ where: { stockItemId: id } });
+        await prisma.stockItem.deleteMany({ where: { id } });
+      }
     }
 
     const updatedMenu = await prisma.menu.update({
@@ -147,10 +199,12 @@ router.put('/:id', async (req, res) => {
         ...(image !== undefined && { image }),
         ...(available !== undefined && { available: Boolean(available) }),
         ...(modifierGroups !== undefined && { modifierGroups }),
-        ...(recipes !== undefined && {
-          recipes: {
+        ...(trackStock !== undefined && {
+          recipes: trackStock ? {
             deleteMany: {},
-            create: recipes.map(r => ({ stockItemId: r.stockItemId, qty: parseFloat(r.qty) }))
+            create: [{ stockItemId: id, qty: 1 }]
+          } : {
+            deleteMany: {}
           }
         })
       },
@@ -177,6 +231,8 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Menu tidak ditemukan.' });
     }
 
+    await prisma.stockTransaction.deleteMany({ where: { stockItemId: id } });
+    await prisma.stockItem.deleteMany({ where: { id } });
     await prisma.menu.delete({ where: { id } });
 
     res.json({ success: true, message: 'Menu berhasil dihapus.' });
