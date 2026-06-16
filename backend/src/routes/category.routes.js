@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
       // 2. Buat kategori baru
       if (categories.length > 0) {
         await tx.category.createMany({
-          data: categories.map((name, index) => ({ name, sortOrder: index }))
+          data: categories.map((name, index) => ({ name: name.toUpperCase().trim(), sortOrder: index }))
         });
       }
     });

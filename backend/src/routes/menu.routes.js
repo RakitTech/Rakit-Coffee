@@ -122,7 +122,7 @@ router.post('/', async (req, res) => {
       data: {
         id,
         name,
-        category,
+        category: category.toUpperCase().trim(),
         desc: desc || null,
         price: parseInt(price),
         image: image || null,
@@ -199,7 +199,7 @@ router.put('/:id', async (req, res) => {
       where: { id },
       data: {
         ...(name !== undefined && { name }),
-        ...(category !== undefined && { category }),
+        ...(category !== undefined && { category: category.toUpperCase().trim() }),
         ...(desc !== undefined && { desc }),
         ...(price !== undefined && { price: parseInt(price) }),
         ...(image !== undefined && { image }),

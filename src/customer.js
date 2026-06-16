@@ -3,6 +3,7 @@ import { Store } from './store.js';
 let cart = [];
 let myOrderIds = [];
 let currentModalMaxQty = Infinity;
+let renderCount = 0;
 
 function showLoading(msg = 'Memproses...') {
   let loader = document.getElementById('global-loader');
@@ -125,17 +126,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function renderMenu() {
+  renderCount++;
+  const currentRender = renderCount;
   showLoading('Memuat menu...');
   const menuContainer = document.getElementById('menu-container');
   const categoryList = document.querySelector('.category-list');
   const menus = await Store.getMenu();
   
+  if (currentRender !== renderCount) return;
+  
   menuContainer.innerHTML = '';
 
-  // Get ordered categories from Store, filter to only those that have items in menu
+  // Get ordered categories from Store, filter and deduplicate them case-insensitively
   const storeCategories = await Store.getCategories();
   hideLoading();
-  const categories = storeCategories.filter(cat => menus.some(m => m.category.toUpperCase() === cat.toUpperCase()));
+  
+  const seenCategories = new Set();
+  const categories = [];
+  storeCategories.forEach(cat => {
+    const upper = cat.toUpperCase();
+    if (!seenCategories.has(upper) && menus.some(m => m.category.toUpperCase() === upper)) {
+      seenCategories.add(upper);
+      categories.push(cat);
+    }
+  });
 
   // Render Category Tabs dynamically
   if (categoryList) {
