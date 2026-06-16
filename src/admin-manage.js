@@ -4,8 +4,14 @@ import { Store } from './store.js';
 
 let salesChartInstance = null;
 let ordersChartInstance = null;
+let globalStockItems = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('http://localhost:3001/api/stock/items');
+    globalStockItems = await res.json();
+  } catch(e) {}
+  
   await Store.applyGlobalTheme();
   if (!Store.isAuthenticated()) {
     window.location.replace('/login.html');
@@ -892,25 +898,27 @@ async function renderMenuTable() {
   }
 
   filteredMenus.forEach(item => {
+    const isStockEmpty = item.stockAvailable === false;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
         <div style="font-weight: 600;">${item.name}</div>
       </td>
       <td>
-        <span style="background-color: var(--color-surface-variant); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${item.category}</span>
+        <span style="background-color: var(--color-surface-variant); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">${(item.category || '').toUpperCase()}</span>
       </td>
       <td>Rp ${item.price.toLocaleString('id-ID')}</td>
-      <td>
-        <label class="toggle-switch">
-          <input type="checkbox" ${item.available ? 'checked' : ''} onchange="toggleMenu('${item.id}', this.checked)">
-          <span class="slider"></span>
+      <td style="text-align: center;">
+        <label class="toggle-switch ${isStockEmpty ? 'disabled' : ''}" title="${isStockEmpty ? 'Stok bahan baku habis' : ''}" style="${isStockEmpty ? 'opacity: 0.5; cursor: not-allowed; margin: 0 auto;' : 'margin: 0 auto;'}">
+          <input type="checkbox" ${item.available ? 'checked' : ''} ${isStockEmpty ? 'disabled' : ''} onchange="toggleMenu('${item.id}', this.checked)">
+          <span class="slider" style="${isStockEmpty ? 'cursor: not-allowed;' : ''}"></span>
         </label>
+        ${isStockEmpty ? '<div style="font-size: 10px; color: var(--color-error); margin-top: 4px; font-weight: bold; text-align: center;">Stok Habis</div>' : ''}
       </td>
-        <td>
-          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openEditMenu('${item.id}')">Edit</button>
-          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-color: var(--color-error); color: var(--color-error);" onclick="deleteMenu('${item.id}')">Hapus</button>
-        </td>
+      <td style="text-align: right; padding-right: 24px;">
+        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" onclick="openEditMenu('${item.id}')">Edit</button>
+        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border-color: var(--color-error); color: var(--color-error);" onclick="deleteMenu('${item.id}')">Hapus</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
@@ -971,26 +979,37 @@ function updateSortIcons(containerSelector, state) {
 // MODIFIER GROUPS BUILDER HELPERS
 // =======================
 
-function createModifierOptionRowHTML(name = '', price = 0) {
+function createModifierOptionRowHTML(name = '', price = 0, stockItemId = '', stockQty = 0) {
+  const stockOptions = globalStockItems.map(item => `<option value="${item.id}" ${item.id === stockItemId ? 'selected' : ''}>${item.name} (${item.unit})</option>`).join('');
+
   return `
-    <div class="modifier-option-row">
-      <span class="material-symbols-outlined drag-handle">drag_indicator</span>
-      <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}">
-      <div class="price-input-wrapper">
-        <span class="price-prefix">+Rp</span>
-        <input type="text" inputmode="numeric" class="filter-modern option-price-input price-format" placeholder="0" required value="${price ? parseInt(price).toLocaleString('id-ID') : ''}">
+    <div class="modifier-option-row" style="flex-wrap: wrap; margin-bottom: 12px; background: var(--color-surface); padding: 8px; border-radius: 4px; border: 1px solid var(--color-surface-variant);">
+      <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
+        <span class="material-symbols-outlined drag-handle" style="cursor: move;">drag_indicator</span>
+        <input type="text" class="filter-modern option-name-input" placeholder="Nama Opsi (cth: Large)" required value="${name}" style="flex: 1;">
+        <div class="price-input-wrapper">
+          <span class="price-prefix">+Rp</span>
+          <input type="text" inputmode="numeric" class="filter-modern option-price-input price-format" placeholder="0" required value="${price ? parseInt(price).toLocaleString('id-ID') : ''}">
+        </div>
+        <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
-      <button type="button" class="btn-remove-option-row" title="Hapus Opsi">
-        <span class="material-symbols-outlined">close</span>
-      </button>
+      <div style="display: flex; gap: 8px; margin-left: 32px; margin-top: 8px; width: calc(100% - 32px);">
+        <select class="filter-modern option-stock-id" style="flex: 1; padding: 4px; font-size: 12px;">
+          <option value="">-- Tidak Terhubung Stok --</option>
+          ${stockOptions}
+        </select>
+        <input type="number" step="0.01" class="filter-modern option-stock-qty" placeholder="Potong Stok (Qty)" value="${stockQty || ''}" style="width: 150px; padding: 4px; font-size: 12px;">
+      </div>
     </div>
   `;
 }
 
 function createModifierGroupCardHTML(groupId, group = { name: '', type: 'single', options: [] }) {
   const optionsHtml = (group.options && group.options.length > 0)
-    ? group.options.map(opt => createModifierOptionRowHTML(opt.name, opt.priceAdd)).join('')
-    : createModifierOptionRowHTML('', 0);
+    ? group.options.map(opt => createModifierOptionRowHTML(opt.name, opt.priceAdd, opt.stockItemId, opt.stockQty)).join('')
+    : createModifierOptionRowHTML('', 0, '', 0);
 
   return `
     <div class="modifier-group-card animate-slide-up" id="${groupId}">
@@ -1071,7 +1090,7 @@ function setupModifierFormEvents(containerId) {
       const card = btnAddOption.closest('.modifier-group-card');
       const optionsContainer = card.querySelector('.modifier-options-container');
       if (optionsContainer) {
-        const rowHtml = createModifierOptionRowHTML('', 0);
+        const rowHtml = createModifierOptionRowHTML('', 0, '', 0);
         optionsContainer.insertAdjacentHTML('beforeend', rowHtml);
       }
       return;
@@ -1124,11 +1143,22 @@ function collectModifierGroups(containerId) {
     card.querySelectorAll('.modifier-option-row').forEach(row => {
       const optNameInput = row.querySelector('.option-name-input');
       const optPriceInput = row.querySelector('.option-price-input');
+      const optStockIdInput = row.querySelector('.option-stock-id');
+      const optStockQtyInput = row.querySelector('.option-stock-qty');
+
       if (optNameInput && optPriceInput) {
         const optName = optNameInput.value.trim();
         const optPrice = parseInt(optPriceInput.value.replace(/\D/g, '')) || 0;
+        const stockItemId = optStockIdInput ? optStockIdInput.value : '';
+        const stockQty = optStockQtyInput ? parseFloat(optStockQtyInput.value) || 0 : 0;
+
         if (optName) {
-          options.push({ name: optName, priceAdd: optPrice });
+          options.push({ 
+            name: optName, 
+            priceAdd: optPrice,
+            stockItemId: stockItemId,
+            stockQty: stockQty
+          });
         }
       }
     });
@@ -1169,6 +1199,17 @@ window.openEditMenu = async function(id) {
   } else {
     preview.style.display = 'none';
   }
+
+  let recipes = [];
+  try {
+    const recipesRes = await fetch(`${API_BASE_URL}/stock/recipes/${id}`);
+    if(recipesRes.ok) recipes = await recipesRes.json();
+  } catch(e) {
+    console.error('Failed to load recipes', e);
+  }
+
+  window.currentBaseRecipesEdit = recipes || [];
+  renderBaseRecipeEdit();
 
   const container = document.getElementById('modifier-groups-container-edit');
   if (container) {
@@ -1371,6 +1412,9 @@ document.addEventListener('DOMContentLoaded', () => {
         containerAdd.innerHTML = '';
         updateModifierEmptyState('modifier-groups-container-add');
       }
+
+      currentBaseRecipes = [];
+      renderBaseRecipeAdd();
       
       document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
       document.getElementById('view-add-menu').classList.add('active');
@@ -1470,6 +1514,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Base Recipe Logic for Add Menu
+  window.currentBaseRecipes = [];
+  window.renderBaseRecipeAdd = function() {
+    const container = document.getElementById('base-recipe-container-add');
+    if (!container) return;
+    if (currentBaseRecipes.length === 0) {
+      container.innerHTML = `
+        <div class="modifier-empty-state" style="padding: 16px;">
+          <p>Belum ada bahan baku ditambahkan.</p>
+        </div>`;
+      return;
+    }
+    
+    container.innerHTML = currentBaseRecipes.map((recipe, index) => `
+      <div style="display: flex; gap: 8px; align-items: center; background: var(--color-surface); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
+        <select class="filter-modern base-recipe-stock-id" style="flex: 2; padding: 6px;" onchange="updateBaseRecipe(${index}, 'id', this.value)" required>
+          <option value="">-- Pilih Bahan --</option>
+          ${globalStockItems.map(item => `<option value="${item.id}" ${item.id === recipe.stockItemId ? 'selected' : ''}>${item.name} (${item.unit})</option>`).join('')}
+        </select>
+        <input type="number" class="filter-modern base-recipe-qty" placeholder="Qty" style="flex: 1; padding: 6px;" value="${recipe.qty || ''}" onchange="updateBaseRecipe(${index}, 'qty', this.value)" required min="0.01" step="0.01">
+        <button type="button" class="btn-icon" style="color: var(--color-error);" onclick="removeBaseRecipe(${index})">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    `).join('');
+  };
+
+  window.updateBaseRecipe = function(index, field, value) {
+    if (field === 'id') currentBaseRecipes[index].stockItemId = value;
+    if (field === 'qty') currentBaseRecipes[index].qty = parseFloat(value) || 0;
+  };
+
+  window.removeBaseRecipe = function(index) {
+    currentBaseRecipes.splice(index, 1);
+    renderBaseRecipeAdd();
+  };
+
+  const btnAddBaseRecipe = document.getElementById('btn-add-base-recipe');
+  if (btnAddBaseRecipe) {
+    btnAddBaseRecipe.addEventListener('click', () => {
+      currentBaseRecipes.push({ stockItemId: '', qty: '' });
+      renderBaseRecipeAdd();
+    });
+  }
+
+  window.currentBaseRecipesEdit = [];
+  window.renderBaseRecipeEdit = function() {
+    const container = document.getElementById('base-recipe-container-edit');
+    if (!container) return;
+    if (currentBaseRecipesEdit.length === 0) {
+      container.innerHTML = `
+        <div class="modifier-empty-state" style="padding: 16px;">
+          <p>Belum ada bahan baku ditambahkan.</p>
+        </div>`;
+      return;
+    }
+    
+    container.innerHTML = currentBaseRecipesEdit.map((recipe, index) => `
+      <div style="display: flex; gap: 8px; align-items: center; background: var(--color-surface); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--color-surface-variant);">
+        <select class="filter-modern base-recipe-stock-id" style="flex: 2; padding: 6px;" onchange="updateBaseRecipeEdit(${index}, 'id', this.value)" required>
+          <option value="">-- Pilih Bahan --</option>
+          ${globalStockItems.map(item => `<option value="${item.id}" ${item.id === recipe.stockItemId ? 'selected' : ''}>${item.name} (${item.unit})</option>`).join('')}
+        </select>
+        <input type="number" class="filter-modern base-recipe-qty" placeholder="Qty" style="flex: 1; padding: 6px;" value="${recipe.qty || ''}" onchange="updateBaseRecipeEdit(${index}, 'qty', this.value)" required min="0.01" step="0.01">
+        <button type="button" class="btn-icon" style="color: var(--color-error);" onclick="removeBaseRecipeEdit(${index})">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>
+    `).join('');
+  };
+
+  window.updateBaseRecipeEdit = function(index, field, value) {
+    if (field === 'id') currentBaseRecipesEdit[index].stockItemId = value;
+    if (field === 'qty') currentBaseRecipesEdit[index].qty = parseFloat(value) || 0;
+  };
+
+  window.removeBaseRecipeEdit = function(index) {
+    currentBaseRecipesEdit.splice(index, 1);
+    renderBaseRecipeEdit();
+  };
+
+  const btnAddBaseRecipeEdit = document.getElementById('btn-add-base-recipe-edit');
+  if (btnAddBaseRecipeEdit) {
+    btnAddBaseRecipeEdit.addEventListener('click', () => {
+      currentBaseRecipesEdit.push({ stockItemId: '', qty: '' });
+      renderBaseRecipeEdit();
+    });
+  }
+
   // Setup modifier form add/edit button clicks & delegation events
   const btnAddGroupAdd = document.getElementById('btn-add-modifier-group-add');
   if (btnAddGroupAdd) {
@@ -1493,13 +1626,25 @@ document.addEventListener('DOMContentLoaded', () => {
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('add-menu-name').value.trim();
-      const category = document.getElementById('add-menu-category').value.trim();
+      const category = document.getElementById('add-menu-category').value.trim().toUpperCase();
       const price = parseInt(document.getElementById('add-menu-price').value.replace(/\D/g, '')) || 0;
       const desc = document.getElementById('add-menu-desc').value.trim();
       const imgPreview = document.getElementById('add-menu-preview');
       const img = imgPreview.style.display === 'block' ? imgPreview.src : '';
 
       const modifierGroups = collectModifierGroups('modifier-groups-container-add');
+
+      let validRecipes = true;
+      for (const br of currentBaseRecipes) {
+        if (!br.stockItemId || !br.qty) {
+          validRecipes = false;
+          break;
+        }
+      }
+      if (!validRecipes) {
+        alert('Pastikan semua baris bahan utama terisi lengkap atau hapus baris yang tidak dipakai.');
+        return;
+      }
 
       const id = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 10) + '_' + Date.now().toString().slice(-4);
 
@@ -1511,7 +1656,8 @@ document.addEventListener('DOMContentLoaded', () => {
         desc: desc,
         image: img,
         modifierGroups: modifierGroups,
-        available: true
+        available: true,
+        recipes: currentBaseRecipes
       });
 
       const categories = await Store.getCategories();
@@ -1542,13 +1688,25 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const id = document.getElementById('edit-menu-id').value;
       const name = document.getElementById('edit-menu-name').value.trim();
-      const category = document.getElementById('edit-menu-category').value.trim();
+      const category = document.getElementById('edit-menu-category').value.trim().toUpperCase();
       const price = parseInt(document.getElementById('edit-menu-price').value.replace(/\D/g, '')) || 0;
       const desc = document.getElementById('edit-menu-desc').value.trim();
       
       const modifierGroups = collectModifierGroups('modifier-groups-container-edit');
       
-      const updateData = { name, category, price, desc, modifierGroups };
+      let validRecipes = true;
+      for (const br of currentBaseRecipesEdit) {
+        if (!br.stockItemId || !br.qty) {
+          validRecipes = false;
+          break;
+        }
+      }
+      if (!validRecipes) {
+        alert('Pastikan semua baris bahan utama terisi lengkap atau hapus baris yang tidak dipakai.');
+        return;
+      }
+      
+      const updateData = { name, category, price, desc, modifierGroups, recipes: currentBaseRecipesEdit };
       
       const imgPreview = document.getElementById('edit-menu-preview');
       if (imgPreview.style.display === 'block') {

@@ -21,6 +21,7 @@ model Menu {
   modifierGroups Json?    // Menyimpan opsi modifikasi dinamis (array of objects)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
+  recipes        MenuRecipe[]
 
   @@map("menus")
 }
@@ -92,3 +93,51 @@ model CmsSetting {
   @@map("cms_settings")
 }
 
+// ============================================================
+// TABEL: stock_items — Master Data Stok Bahan Baku
+// ============================================================
+model StockItem {
+  id          String   @id @default(cuid()) @db.VarChar(50)
+  name        String   @db.VarChar(150)
+  unit        String   @db.VarChar(50) // e.g. 'kg', 'liter', 'pcs', 'gram'
+  qty         Float    @default(0)
+  minQty      Float    @default(0) @map("min_qty")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  transactions StockTransaction[]
+  menuRecipes  MenuRecipe[]
+
+  @@map("stock_items")
+}
+
+// ============================================================
+// TABEL: menu_recipes — Resep / Bahan Baku Menu
+// ============================================================
+model MenuRecipe {
+  id          String   @id @default(cuid()) @db.VarChar(50)
+  menuId      String   @map("menu_id") @db.VarChar(50)
+  stockItemId String   @map("stock_item_id") @db.VarChar(50)
+  qty         Float    // Jumlah stok yang dibutuhkan untuk 1 porsi menu
+  
+  menu        Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@map("menu_recipes")
+}
+
+// ============================================================
+// TABEL: stock_transactions — Riwayat Masuk/Keluar Stok
+// ============================================================
+model StockTransaction {
+  id          String   @id @default(cuid()) @db.VarChar(50)
+  stockItemId String   @map("stock_item_id") @db.VarChar(50)
+  type        String   @db.VarChar(20) // 'IN' atau 'OUT'
+  qty         Float
+  notes       String?  @db.Text
+  date        DateTime @default(now())
+
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@map("stock_transactions")
+}

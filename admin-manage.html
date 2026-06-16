@@ -56,6 +56,10 @@
         <span class="material-symbols-outlined">restaurant_menu</span>
         Kelola Menu
       </a>
+      <a href="/admin-stok.html" class="sidebar-item">
+        <span class="material-symbols-outlined">inventory_2</span>
+        Kelola Stok
+      </a>
       <a href="/admin-cms.html" class="sidebar-item" id="nav-cms">
         <span class="material-symbols-outlined">palette</span>
         Tampilan Pelanggan
@@ -84,15 +88,15 @@
               <input type="text" id="manage-menu-search" class="filter-modern" placeholder="Cari Nama Menu..." style="width: 240px; border: 1px solid var(--color-surface-variant);">
             </div>
           </div>
-          <div class="table-container">
+          <div class="table-container" style="max-height: none; overflow-y: visible;">
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Nama Produk</th>
-                  <th>Kategori</th>
-                  <th>Harga</th>
-                  <th>Ketersediaan</th>
-                  <th>Aksi</th>
+                  <th style="width: 30%;">Nama Produk</th>
+                  <th style="width: 15%;">Kategori</th>
+                  <th style="width: 20%;">Harga</th>
+                  <th style="width: 15%; text-align: center;">Ketersediaan</th>
+                  <th style="width: 20%; text-align: right; padding-right: 24px;">Aksi</th>
                 </tr>
               </thead>
               <tbody id="menu-table-body">
@@ -175,6 +179,22 @@
               <img id="add-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
             </div>
 
+            <!-- Base Recipe (Wajib) -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-weight: 600; font-size: 14px;">Kebutuhan Bahan Utama <span style="color: var(--color-error);">*</span></label>
+                <button type="button" id="btn-add-base-recipe" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Bahan
+                </button>
+              </div>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Pilih bahan baku wajib untuk menu ini. (Tidak bisa diubah setelah menu dibuat)</p>
+              <div id="base-recipe-container-add" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                <div class="modifier-empty-state" style="padding: 16px;">
+                  <p>Belum ada bahan baku ditambahkan.</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Spesifikasi Kustom -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -232,6 +252,20 @@
               <label for="edit-menu-image" style="font-weight: 600; font-size: 14px;">Foto Menu (Kosongi jika tidak diubah)</label>
               <input type="file" id="edit-menu-image" accept="image/*" style="width: 100%; padding: 8px 0;">
               <img id="edit-menu-preview" src="" style="display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
+            </div>
+
+            <!-- Base Recipe (Edit) -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label style="font-weight: 600; font-size: 14px;">Kebutuhan Bahan Utama</label>
+                <button type="button" id="btn-add-base-recipe-edit" class="btn btn-outline" style="padding: 4px 12px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">add</span> Tambah Bahan
+                </button>
+              </div>
+              <p style="font-size: 12px; color: var(--color-text-muted); margin: 0;">Pilih bahan baku wajib untuk menu ini. (Opsional)</p>
+              <div id="base-recipe-container-edit" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+                <!-- Diisi lewat JS -->
+              </div>
             </div>
 
             <!-- Spesifikasi Kustom -->

@@ -350,13 +350,16 @@ function renderDynamicModifiers(menuItem, cartItem = null) {
     const prevSelectedNames = prevGroup ? prevGroup.selected.map(s => s.name) : [];
 
     const optionsHtml = group.options.map((opt, optIdx) => {
-      const isChecked = prevSelectedNames.includes(opt.name) || (isSingle && optIdx === 0 && !cartItem);
+      // opt.available bernilai false jika stok modifier bersangkutan habis (dihitung oleh backend)
+      const isOutOfStock = opt.available === false;
+      const isChecked = !isOutOfStock && (prevSelectedNames.includes(opt.name) || (isSingle && optIdx === 0 && !cartItem));
       const priceText = opt.priceAdd > 0 ? ` (+Rp ${opt.priceAdd.toLocaleString('id-ID')})` : '';
+      const stockText = isOutOfStock ? ' <span style="color: var(--color-error); font-size: 12px; font-weight: bold;">(Habis)</span>' : '';
       
       return `
-        <label class="${isSingle ? 'radio-item' : 'checkbox-item'}">
-          <span>${opt.name}${priceText}</span>
-          <input type="${inputType}" name="${nameAttr}" value="${opt.name}" data-price="${opt.priceAdd}" class="modifier-input" data-group="${group.name}" ${isChecked ? 'checked' : ''} onchange="recalculateModalPrice()">
+        <label class="${isSingle ? 'radio-item' : 'checkbox-item'} ${isOutOfStock ? 'disabled-option' : ''}" style="${isOutOfStock ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
+          <span>${opt.name}${priceText}${stockText}</span>
+          <input type="${inputType}" name="${nameAttr}" value="${opt.name}" data-price="${opt.priceAdd}" data-stock-id="${opt.stockItemId || ''}" data-stock-qty="${opt.stockQty || 0}" class="modifier-input" data-group="${group.name}" ${isChecked ? 'checked' : ''} ${isOutOfStock ? 'disabled' : ''} onchange="recalculateModalPrice()">
         </label>
       `;
     }).join('');
@@ -510,8 +513,10 @@ function setupModal() {
         if (inputs.length > 0) {
           const selectedOpts = Array.from(inputs).map(input => {
             const priceAdd = parseInt(input.dataset.price) || 0;
+            const stockItemId = input.dataset.stockId || null;
+            const stockQty = parseFloat(input.dataset.stockQty) || 0;
             modifierTotal += priceAdd;
-            return { name: input.value, priceAdd: priceAdd };
+            return { name: input.value, priceAdd: priceAdd, stockItemId, stockQty };
           });
           selectedModifiers.push({
             groupName: group.name,

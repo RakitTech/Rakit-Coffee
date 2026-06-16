@@ -10,9 +10,53 @@ router.get('/', async (req, res) => {
   try {
     const menus = await prisma.menu.findMany({
       orderBy: { createdAt: 'asc' },
+      include: { recipes: true }
     });
 
-    res.json(menus); // Kirim langsung array menu (kompatibel dengan JSON.parse(localStorage.getItem('rakit_menu')))
+    const stockItems = await prisma.stockItem.findMany();
+    const stockMap = {};
+    stockItems.forEach(s => { stockMap[s.id] = s.qty; });
+
+    // Evaluasi ketersediaan berdasarkan stok
+    const evaluatedMenus = menus.map(menu => {
+      let stockAvailable = true;
+      if (menu.recipes && menu.recipes.length > 0) {
+        for (const recipe of menu.recipes) {
+          if ((stockMap[recipe.stockItemId] || 0) < recipe.qty) {
+            stockAvailable = false;
+            break;
+          }
+        }
+      }
+      
+      // Evaluasi modifier jika memakai sistem stok di modifier
+      let updatedModifierGroups = menu.modifierGroups || [];
+      if (updatedModifierGroups.length > 0) {
+        updatedModifierGroups = updatedModifierGroups.map(group => {
+          return {
+            ...group,
+            options: group.options.map(opt => {
+              let optAvailable = true;
+              if (opt.stockItemId && opt.stockQty) {
+                if ((stockMap[opt.stockItemId] || 0) < parseFloat(opt.stockQty)) {
+                  optAvailable = false;
+                }
+              }
+              return { ...opt, available: optAvailable };
+            })
+          };
+        });
+      }
+
+      return {
+        ...menu,
+        modifierGroups: updatedModifierGroups,
+        available: menu.available && stockAvailable, // Override available jika stok habis
+        stockAvailable: stockAvailable // Tambahkan ini agar frontend tahu alasan disabled
+      };
+    });
+
+    res.json(evaluatedMenus);
   } catch (error) {
     console.error('[GET /menus]', error);
     res.status(500).json({ error: 'Gagal mengambil data menu.' });
@@ -27,6 +71,7 @@ router.get('/:id', async (req, res) => {
   try {
     const menu = await prisma.menu.findUnique({
       where: { id: req.params.id },
+      include: { recipes: true }
     });
 
     if (!menu) {
@@ -46,7 +91,7 @@ router.get('/:id', async (req, res) => {
 // ============================================================
 router.post('/', async (req, res) => {
   try {
-    const { id, name, category, desc, price, image, available = true, modifierGroups = [] } = req.body;
+    const { id, name, category, desc, price, image, available = true, modifierGroups = [], recipes = [] } = req.body;
 
     if (!id || !name || !category || price === undefined) {
       return res.status(400).json({
@@ -64,7 +109,11 @@ router.post('/', async (req, res) => {
         image: image || null,
         available: Boolean(available),
         modifierGroups: modifierGroups || [],
+        recipes: recipes.length > 0 ? {
+          create: recipes.map(r => ({ stockItemId: r.stockItemId, qty: parseFloat(r.qty) }))
+        } : undefined
       },
+      include: { recipes: true }
     });
 
     res.status(201).json(newMenu);
@@ -81,7 +130,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, desc, price, image, available, modifierGroups } = req.body;
+    const { name, category, desc, price, image, available, modifierGroups, recipes } = req.body;
 
     const existing = await prisma.menu.findUnique({ where: { id } });
     if (!existing) {
@@ -98,7 +147,14 @@ router.put('/:id', async (req, res) => {
         ...(image !== undefined && { image }),
         ...(available !== undefined && { available: Boolean(available) }),
         ...(modifierGroups !== undefined && { modifierGroups }),
+        ...(recipes !== undefined && {
+          recipes: {
+            deleteMany: {},
+            create: recipes.map(r => ({ stockItemId: r.stockItemId, qty: parseFloat(r.qty) }))
+          }
+        })
       },
+      include: { recipes: true }
     });
 
     res.json(updatedMenu);

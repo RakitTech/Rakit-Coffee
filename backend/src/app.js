@@ -7,6 +7,7 @@ const orderRoutes = require('./routes/order.routes');
 const categoryRoutes = require('./routes/category.routes');
 const cmsRoutes = require('./routes/cms.routes');
 const authRoutes = require('./routes/auth.routes');
+const stockRoutes = require('./routes/stock.routes');
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/api/menus', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cms', cmsRoutes);
+app.use('/api/stock', stockRoutes);
 
 // ============================================================
 // 404 Handler

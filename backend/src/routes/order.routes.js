@@ -96,22 +96,75 @@ router.post('/', async (req, res) => {
       };
     });
 
-    const newOrder = await prisma.order.create({
-      data: {
-        id: orderId,
-        customerName: orderData.customerName,
-        table: orderData.table || '12',
-        total: calculatedTotal,
-        status: 'Diterima',
-        paymentStatus: orderData.paymentStatus || 'Belum Bayar',
-        paymentMethod: orderData.paymentMethod || 'QRIS',
-        items: {
-          create: itemsToCreate,
+    const newOrder = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          id: orderId,
+          customerName: orderData.customerName,
+          table: orderData.table || '12',
+          total: calculatedTotal,
+          status: 'Diterima',
+          paymentStatus: orderData.paymentStatus || 'Belum Bayar',
+          paymentMethod: orderData.paymentMethod || 'QRIS',
+          items: {
+            create: itemsToCreate,
+          },
         },
-      },
-      include: {
-        items: true,
-      },
+        include: {
+          items: true,
+        },
+      });
+
+      // Proses deduksi stok
+      for (const item of orderData.items) {
+        if (!item.id) continue;
+        const qtyOrdered = parseInt(item.qty) || 1;
+
+        // Deduksi resep menu
+        const menuRecipes = await tx.menuRecipe.findMany({ where: { menuId: item.id } });
+        for (const recipe of menuRecipes) {
+          const deductQty = recipe.qty * qtyOrdered;
+          await tx.stockItem.update({
+            where: { id: recipe.stockItemId },
+            data: { qty: { decrement: deductQty } }
+          });
+          await tx.stockTransaction.create({
+            data: {
+              stockItemId: recipe.stockItemId,
+              type: 'OUT',
+              qty: deductQty,
+              notes: `Order ${orderId} - Menu: ${item.name}`
+            }
+          });
+        }
+
+        // Deduksi modifier (jika modifier di-set untuk memotong stok)
+        if (item.selectedModifiers && Array.isArray(item.selectedModifiers)) {
+          for (const group of item.selectedModifiers) {
+            if (group.selected && Array.isArray(group.selected)) {
+              for (const mod of group.selected) {
+                if (mod.stockItemId && mod.stockQty) {
+                  const modDeduct = parseFloat(mod.stockQty) * qtyOrdered;
+                  await tx.stockItem.update({
+                    where: { id: mod.stockItemId },
+                    data: { qty: { decrement: modDeduct } }
+                  });
+                  await tx.stockTransaction.create({
+                    data: {
+                      stockItemId: mod.stockItemId,
+                      type: 'OUT',
+                      qty: modDeduct,
+                      notes: `Order ${orderId} - Tambahan: ${mod.name}`
+                    }
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return order;
     });
 
     // Format response agar persis seperti format yang di-resolve oleh Store.addOrder()
