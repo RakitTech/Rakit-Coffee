@@ -7,10 +7,12 @@
 
 .admin-sidebar {
   width: 260px;
+  flex-shrink: 0;
   background-color: #fefaf0; /* Extremely light gold background */
   border-right: 1px solid #f5ebd5; /* Extremely light gold border */
   display: flex;
   flex-direction: column;
+  font-family: 'Inter', sans-serif;
 }
 
 .sidebar-brand {
@@ -38,6 +40,7 @@
   text-decoration: none;
   font-weight: 600;
   transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
 }
 
 .sidebar-item:hover {

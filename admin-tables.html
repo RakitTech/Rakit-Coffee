@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Meja - Rakit Coffee</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/css/design-system.css">
+  <link rel="stylesheet" href="./src/css/admin.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    (function() {
+      try {
+        var cms = localStorage.getItem('rakit_cms');
+        if (cms) {
+          var settings = JSON.parse(cms);
+          if (settings.themeColor) {
+            document.documentElement.style.setProperty('--color-accent', settings.themeColor);
+            document.documentElement.style.setProperty('--color-accent-light', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-hover', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-05', settings.themeColor + '0D');
+            document.documentElement.style.setProperty('--color-accent-10', settings.themeColor + '1A');
+            document.documentElement.style.setProperty('--color-accent-15', settings.themeColor + '26');
+            document.documentElement.style.setProperty('--color-accent-20', settings.themeColor + '33');
+            document.documentElement.style.setProperty('--shadow-accent', '0 8px 30px ' + settings.themeColor + '4D');
+            document.documentElement.style.setProperty('--kitchen-header-bg', settings.themeColor);
+          }
+          if (settings.fontFamily) {
+             document.documentElement.style.setProperty('--font-heading', settings.fontFamily);
+          }
+        }
+      } catch(e) {}
+    })();
+  </script>
+  <style>
+    .qr-generator-panel {
+      background: var(--color-surface-container);
+      padding: var(--space-xl);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-xl);
+      border: 1px solid var(--color-surface-variant);
+    }
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 32px;
+      margin-top: var(--space-xl);
+    }
+    
+    /* PREMIUM TENT CARD STYLE */
+    .qr-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      page-break-inside: avoid;
+    }
+    .qr-card {
+      background: #ffffff;
+      border: 6px double var(--color-accent, #AF8C53);
+      border-radius: 28px;
+      padding: 32px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 320px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      color: #1e293b;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+    .qr-card-logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--color-accent, #AF8C53);
+      letter-spacing: 0.1em;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .qr-card-tagline {
+      font-size: 10px;
+      color: #64748b;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+    .qr-card-divider {
+      width: 60px;
+      height: 2px;
+      background: var(--color-accent, #AF8C53);
+      margin-bottom: 20px;
+      border-radius: var(--radius-full);
+    }
+    .qr-image-frame {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 20px;
+      border: 2px solid var(--color-accent-light, #AF8C5333);
+      margin-bottom: 20px;
+      display: inline-block;
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+    }
+    .qr-image {
+      width: 180px;
+      height: 180px;
+      display: block;
+    }
+    .qr-card-instructions {
+      font-size: 13px;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .qr-steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      padding: 0 16px;
+      margin-bottom: 24px;
+    }
+    .qr-step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .qr-step-icon {
+      background: var(--color-accent-light, #AF8C5326);
+      color: var(--color-accent, #AF8C53);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .qr-table-banner {
+      background: var(--color-accent, #AF8C53);
+      color: white;
+      padding: 8px 32px;
+      border-radius: 16px;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.1em;
+      box-shadow: 0 4px 12px var(--color-accent-20, #AF8C5333);
+      text-transform: uppercase;
+      margin-top: auto;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* PRINT STYLES */
+    @media print {
+      html, body {
+        background: white !important;
+        color: black !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .admin-body {
+        display: block !important;
+        background: white !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+      .admin-sidebar,
+      .admin-header,
+      .qr-generator-panel,
+      .no-print,
+      .qr-card-wrapper > button {
+        display: none !important;
+      }
+      .admin-main {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        position: static !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+      .admin-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+      .section-block {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+      .qr-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 40px 24px !important;
+        margin-top: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+      .qr-card-wrapper {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        display: flex !important;
+        justify-content: center !important;
+        height: auto !important;
+      }
+      .qr-card {
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        border: 6px double var(--color-accent, #AF8C53) !important;
+        background: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+</head>
+<body class="admin-body">
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <h1 style="color: var(--color-accent); font-size: 24px;">Rakit<span style="color: var(--color-text-body);">Admin</span></h1>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/admin.html" class="sidebar-item">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard Penjualan
+      </a>
+      <a href="/admin-analytics.html" class="sidebar-item">
+        <span class="material-symbols-outlined">analytics</span>
+        Dashboard Menu
+      </a>
+      <a href="/admin-manage.html" class="sidebar-item">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        Kelola Menu
+      </a>
+      <a href="/admin-stok.html" class="sidebar-item">
+        <span class="material-symbols-outlined">inventory_2</span>
+        Kelola Stok
+      </a>
+      <a href="/admin-tables.html" class="sidebar-item active">
+        <span class="material-symbols-outlined">qr_code_2</span>
+        QR Code Meja
+      </a>
+      <a href="/admin-cms.html" class="sidebar-item" id="nav-cms">
+        <span class="material-symbols-outlined">palette</span>
+        Tampilan Pelanggan
+      </a>
+      <a href="#" class="sidebar-item" id="btn-logout" style="margin-top: auto; color: #dc3545;">
+        <span class="material-symbols-outlined">logout</span>
+        Keluar
+      </a>
+    </nav>
+  </aside>
+  <main class="admin-main">
+    <header class="admin-header">
+      <h2 style="color: white;">QR Code Meja</h2>
+    </header>
+
+    <div class="admin-content">
+      <!-- Info Flow System -->
+      <div class="qr-generator-panel" style="background: rgba(175, 140, 83, 0.05); border-color: var(--color-accent-light); margin-bottom: 24px;">
+        <div style="display: flex; gap: 16px; align-items: flex-start;">
+          <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-accent);">info</span>
+          <div>
+            <h3 style="margin: 0 0 8px 0; color: var(--color-accent);">Cara Kerja Alur QR Ordering</h3>
+            <p style="margin: 0; line-height: 1.6; font-size: 14px; color: var(--color-text-muted);">
+              Pelanggan cukup memindai QR Code meja mereka menggunakan kamera smartphone. QR Code tersebut secara otomatis mengarahkan pelanggan ke menu dengan menyisipkan parameter nomor meja (misal: <code>?table=5</code>). Saat pesanan dikirim, sistem secara otomatis meneruskan nomor meja ke dapur KDS dan kasir tanpa perlu pengetikan manual.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generator Inputs -->
+      <div class="qr-generator-panel">
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px;">Generator QR Code Meja</h3>
+        <div style="display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+            <label class="form-label" style="font-size: 13px;">Mulai dari Nomor Meja</label>
+            <input type="number" id="start-table" class="filter-modern" value="1" min="1" style="width: 100%;">
+          </div>
+          
+          <div class="form-group" style="margin: 0; flex: 1; min-width: 150px;">
+            <label class="form-label" style="font-size: 13px;">Sampai Nomor Meja</label>
+            <input type="number" id="end-table" class="filter-modern" value="10" min="1" style="width: 100%;">
+          </div>
+          
+          <div style="display: flex; gap: 12px; min-width: 320px;">
+            <button id="btn-generate-qr" class="btn btn-primary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="material-symbols-outlined">qr_code</span> Generate QR
+            </button>
+            <button id="btn-print-qr" class="btn btn-outline" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <span class="material-symbols-outlined">print</span> Cetak Semua
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Preview Area -->
+      <div class="section-block">
+        <h3 style="margin-top: 0; margin-bottom: 16px;" class="no-print">Preview QR Code</h3>
+        <div id="qr-preview-container" class="qr-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="./src/admin-tables.js"></script>
+</body>
+</html>
