@@ -9,7 +9,7 @@ const prisma = require('../lib/prisma');
 router.get('/', async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
-      orderBy: { name: 'asc' }
+      orderBy: { sortOrder: 'asc' }
     });
 
     const categoryNames = categories.map(c => c.name);
@@ -40,7 +40,7 @@ router.post('/', async (req, res) => {
       // 2. Buat kategori baru
       if (categories.length > 0) {
         await tx.category.createMany({
-          data: categories.map(name => ({ name }))
+          data: categories.map((name, index) => ({ name, sortOrder: index }))
         });
       }
     });

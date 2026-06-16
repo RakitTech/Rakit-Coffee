@@ -29,7 +29,8 @@ model Menu {
 // TABEL: categories — Daftar Kategori Menu
 // ============================================================
 model Category {
-  name String @id @db.VarChar(50)
+  name      String @id @db.VarChar(50)
+  sortOrder Int    @default(0) @map("sort_order")
 
   @@map("categories")
 }
