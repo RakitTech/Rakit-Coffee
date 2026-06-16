@@ -20,13 +20,18 @@ router.get('/', async (req, res) => {
     // Evaluasi ketersediaan berdasarkan stok
     const evaluatedMenus = menus.map(menu => {
       let stockAvailable = true;
+      let remainingStock = null;
+
       if (menu.recipes && menu.recipes.length > 0) {
+        const stocks = [];
         for (const recipe of menu.recipes) {
-          if ((stockMap[recipe.stockItemId] || 0) < recipe.qty) {
+          const qtyInStock = stockMap[recipe.stockItemId] || 0;
+          if (qtyInStock < recipe.qty) {
             stockAvailable = false;
-            break;
           }
+          stocks.push(Math.floor(qtyInStock / recipe.qty));
         }
+        remainingStock = Math.min(...stocks);
       }
       
       // Evaluasi modifier jika memakai sistem stok di modifier
@@ -52,7 +57,8 @@ router.get('/', async (req, res) => {
         ...menu,
         modifierGroups: updatedModifierGroups,
         available: menu.available && stockAvailable, // Override available jika stok habis
-        stockAvailable: stockAvailable // Tambahkan ini agar frontend tahu alasan disabled
+        stockAvailable: stockAvailable, // Tambahkan ini agar frontend tahu alasan disabled
+        remainingStock: remainingStock !== null ? Math.max(0, remainingStock) : null
       };
     });
 

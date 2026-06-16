@@ -2,6 +2,7 @@ import { Store } from './store.js';
 
 let cart = [];
 let myOrderIds = [];
+let currentModalMaxQty = Infinity;
 
 function showLoading(msg = 'Memproses...') {
   let loader = document.getElementById('global-loader');
@@ -188,23 +189,29 @@ async function renderMenu() {
     let actionHtml = '';
     if (item.available) {
       if (totalQty > 0) {
+        const isLimit = item.remainingStock !== null && totalQty >= item.remainingStock;
         actionHtml = `
           <div style="display: flex; align-items: center; gap: 8px; background: var(--color-surface-container); padding: 4px; border-radius: 20px;">
             <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-lowest); color: var(--color-primary);" onclick="quickDecrement('${item.id}')">
               <span class="material-symbols-outlined" style="font-size: 16px;">remove</span>
             </button>
             <span style="font-weight: bold; font-size: 14px; min-width: 16px; text-align: center;">${totalQty}</span>
-            <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-lowest); color: var(--color-primary);" onclick="openCustomizationModal('${item.id}')">
+            <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-lowest); color: var(--color-primary); ${isLimit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" ${isLimit ? 'disabled' : ''} onclick="openCustomizationModal('${item.id}')">
               <span class="material-symbols-outlined" style="font-size: 16px;">add</span>
             </button>
           </div>
         `;
       } else {
-        actionHtml = `
-          <button class="btn-icon" onclick="openCustomizationModal('${item.id}')">
-            <span class="material-symbols-outlined">add</span>
-          </button>
-        `;
+        const isLimit = item.remainingStock !== null && item.remainingStock <= 0;
+        if (isLimit) {
+          actionHtml = `<span style="font-size: 12px; color: var(--color-error); font-weight: bold; padding: 4px 8px;">Habis</span>`;
+        } else {
+          actionHtml = `
+            <button class="btn-icon" onclick="openCustomizationModal('${item.id}')">
+              <span class="material-symbols-outlined">add</span>
+            </button>
+          `;
+        }
       }
     }
 
@@ -383,20 +390,31 @@ window.openCustomizationModal = async function(itemId) {
   const item = menus.find(m => m.id === itemId);
   if (!item) return;
 
+  const totalInCart = cart
+    .filter(c => c.id === item.id)
+    .reduce((sum, c) => sum + c.qty, 0);
+
+  if (item.remainingStock !== null && totalInCart >= item.remainingStock) {
+    alert(`Stok tidak mencukupi. Semua stok tersedia (${item.remainingStock}) sudah dimasukkan ke keranjang.`);
+    return;
+  }
+
+  currentModalMaxQty = item.remainingStock !== null ? Math.max(0, item.remainingStock - totalInCart) : Infinity;
+
   document.getElementById('modal-item-id').value = item.id;
   document.getElementById('modal-cart-index').value = '';
   document.getElementById('modal-title').textContent = item.name;
   document.getElementById('modal-desc').textContent = item.desc;
   document.getElementById('modal-img').src = item.image;
   
-  document.getElementById('modal-price').dataset.basePrice = item.price;
-  
-  renderDynamicModifiers(item);
-  
   // Reset form and quantity
   document.getElementById('customization-form').reset();
   document.getElementById('modal-quantity-val').value = 1;
   document.getElementById('modal-quantity-display').textContent = '1';
+
+  document.getElementById('modal-price').dataset.basePrice = item.price;
+  
+  renderDynamicModifiers(item);
   recalculateModalPrice();
   
   // Show modal
@@ -413,6 +431,12 @@ window.openEditModal = async function(cartIndex) {
   hideLoading();
   const menuDef = menus.find(m => m.id === cartItem.id);
   if (!menuDef) return;
+
+  const totalInCartOthers = cart
+    .filter((c, idx) => c.id === menuDef.id && idx !== cartIndex)
+    .reduce((sum, c) => sum + c.qty, 0);
+
+  currentModalMaxQty = menuDef.remainingStock !== null ? Math.max(1, menuDef.remainingStock - totalInCartOthers) : Infinity;
 
   document.getElementById('modal-item-id').value = cartItem.id;
   document.getElementById('modal-cart-index').value = cartIndex;
@@ -466,11 +490,14 @@ window.quickDecrement = function(itemId) {
 window.updateModalQuantity = function(change) {
   const input = document.getElementById('modal-quantity-val');
   const display = document.getElementById('modal-quantity-display');
-  const priceEl = document.getElementById('modal-price');
   
   let currentVal = parseInt(input.value) || 1;
   let newVal = currentVal + change;
   if (newVal < 1) newVal = 1;
+  if (newVal > currentModalMaxQty) {
+    alert(`Stok terbatas. Hanya dapat memesan maksimal ${currentModalMaxQty} porsi.`);
+    newVal = currentModalMaxQty;
+  }
   
   input.value = newVal;
   display.textContent = newVal;
@@ -654,17 +681,22 @@ window.processCheckout = async function() {
   const paymentMethodInput = document.querySelector('input[name="payment-method"]:checked');
   const paymentMethod = paymentMethodInput ? paymentMethodInput.value : 'qris';
 
-  const order = await Store.addOrder({
-    customerName: nameInput,
-    items: [...cart],
-    total: total,
-    table: tableNum,
-    paymentMethod: paymentMethod.toUpperCase(),
-    paymentStatus: 'Belum Bayar'
-  });
-  
-  hideLoading();
-  showPaymentSimulationModal(order, paymentMethod);
+  try {
+    const order = await Store.addOrder({
+      customerName: nameInput,
+      items: [...cart],
+      total: total,
+      table: tableNum,
+      paymentMethod: paymentMethod.toUpperCase(),
+      paymentStatus: 'Belum Bayar'
+    });
+    
+    hideLoading();
+    showPaymentSimulationModal(order, paymentMethod);
+  } catch (err) {
+    hideLoading();
+    alert(err.message || 'Gagal memproses pesanan. Silakan coba lagi.');
+  }
 };
 
 function showPaymentSimulationModal(order, paymentMethod) {

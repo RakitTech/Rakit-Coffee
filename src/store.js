@@ -166,7 +166,10 @@ export const Store = {
         headers: getHeaders(),
         body: JSON.stringify(orderData)
       });
-      if (!res.ok) throw new Error('Failed to create order');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to create order');
+      }
       const newOrder = await res.json();
       triggerSync();
       return newOrder;

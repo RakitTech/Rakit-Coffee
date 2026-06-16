@@ -97,6 +97,48 @@ router.post('/', async (req, res) => {
     });
 
     const newOrder = await prisma.$transaction(async (tx) => {
+      // 1. Agregasi kebutuhan stok untuk seluruh order
+      const requiredStockMap = {};
+      for (const item of orderData.items) {
+        if (!item.id) continue;
+        const qtyOrdered = parseInt(item.qty) || 1;
+
+        // Kebutuhan resep menu
+        const menuRecipes = await tx.menuRecipe.findMany({ where: { menuId: item.id } });
+        for (const recipe of menuRecipes) {
+          const key = recipe.stockItemId;
+          const needed = recipe.qty * qtyOrdered;
+          requiredStockMap[key] = (requiredStockMap[key] || 0) + needed;
+        }
+
+        // Kebutuhan modifier
+        if (item.selectedModifiers && Array.isArray(item.selectedModifiers)) {
+          for (const group of item.selectedModifiers) {
+            if (group.selected && Array.isArray(group.selected)) {
+              for (const mod of group.selected) {
+                if (mod.stockItemId && mod.stockQty) {
+                  const key = mod.stockItemId;
+                  const needed = parseFloat(mod.stockQty) * qtyOrdered;
+                  requiredStockMap[key] = (requiredStockMap[key] || 0) + needed;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Verifikasi stok mencukupi
+      for (const stockItemId of Object.keys(requiredStockMap)) {
+        const stockItem = await tx.stockItem.findUnique({ where: { id: stockItemId } });
+        const currentQty = stockItem ? stockItem.qty : 0;
+        const neededQty = requiredStockMap[stockItemId];
+        if (currentQty < neededQty) {
+          const displayName = stockItem ? stockItem.name : stockItemId;
+          throw new Error(`INSUFFICIENT_STOCK|${displayName}|${currentQty}`);
+        }
+      }
+
+      // 3. Buat order
       const order = await tx.order.create({
         data: {
           id: orderId,
@@ -115,7 +157,7 @@ router.post('/', async (req, res) => {
         },
       });
 
-      // Proses deduksi stok
+      // 4. Proses deduksi stok
       for (const item of orderData.items) {
         if (!item.id) continue;
         const qtyOrdered = parseInt(item.qty) || 1;
@@ -195,6 +237,12 @@ router.post('/', async (req, res) => {
     res.status(201).json(responseData);
   } catch (error) {
     console.error('[POST /orders]', error);
+    if (error.message && error.message.startsWith('INSUFFICIENT_STOCK|')) {
+      const parts = error.message.split('|');
+      return res.status(400).json({ 
+        error: `Stok tidak mencukupi untuk ${parts[1]}. Tersedia: ${parseInt(parts[2]) || 0}` 
+      });
+    }
     res.status(500).json({ error: 'Gagal membuat pesanan.' });
   }
 });
