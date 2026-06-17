@@ -838,15 +838,56 @@ function showPaymentSimulationModal(order, paymentMethod) {
       lightbox.style = `
         position: fixed;
         top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0,0,0,0.95);
-        display: flex; justify-content: center; align-items: center;
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        display: flex; flex-direction: column; justify-content: space-between; align-items: center;
         z-index: 100000;
         cursor: pointer;
+        padding: 32px 20px;
+        box-sizing: border-box;
+        font-family: var(--font-body, 'Outfit', sans-serif);
       `;
       lightbox.innerHTML = `
-        <div style="text-align: center; max-width: 90%; max-height: 90%;">
-          <img src="${cmsSettings.paymentQris}" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);" />
-          <p style="color: #94a3b8; font-size: 14px; margin-top: 16px;">Ketuk di mana saja untuk kembali</p>
+        <!-- Header Branding -->
+        <div style="text-align: center; margin-top: 10px;">
+          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin-bottom: 4px;">POWERED BY</div>
+          <div style="font-size: 18px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 1px;">
+            ${cmsSettings && cmsSettings.paymentAccName ? cmsSettings.paymentAccName.split(' ')[0] : 'RAKIT'}<span style="color: #fff;">PAY</span>
+          </div>
+        </div>
+
+        <!-- Central Card Container -->
+        <div style="
+          background: #ffffff;
+          border-radius: 16px;
+          padding: 20px;
+          width: 100%;
+          max-width: 330px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        ">
+          <!-- Main QRIS Card image -->
+          <img src="${cmsSettings.paymentQris}" style="width: 100%; max-height: 52vh; object-fit: contain; border-radius: 8px;" />
+          
+          <div style="margin-top: 12px; text-align: center;">
+            <p style="font-size: 11px; color: #94a3b8; font-family: monospace; margin: 0;">ID: ${order.id}</p>
+          </div>
+        </div>
+
+        <!-- E-wallet Logos / Badges -->
+        <div style="text-align: center; width: 100%; max-width: 400px; margin-bottom: 10px;">
+          <p style="color: #475569; font-size: 10px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Dukung Pembayaran Instan via</p>
+          <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">GOPAY</span>
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">OVO</span>
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">DANA</span>
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">LINKAJA</span>
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">SHOPEEPAY</span>
+            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">M-BANKING</span>
+          </div>
+          <p style="color: #64748b; font-size: 11px; margin-top: 20px; font-weight: 500;">Ketuk di mana saja untuk kembali</p>
         </div>
       `;
       lightbox.onclick = () => {
