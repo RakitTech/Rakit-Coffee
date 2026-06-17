@@ -795,23 +795,48 @@ function showPaymentSimulationModal(order, paymentMethod) {
           </div>
           <span style="font-size: 11px; color: #64748b;">(Simulasi transfer bank otomatis)</span>
         ` : `
-          <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+          <p style="font-size: 14px; color: #94a3b8; margin-bottom: 20px; line-height: 1.5;">
             Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
           </p>
-          <div style="background: white; padding: 12px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 100%;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
             ${cmsSettings && cmsSettings.paymentQris ? `
-              <div id="qris-img-container" style="cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center;">
-                <img src="${cmsSettings.paymentQris}" style="max-width: 220px; max-height: 300px; width: 100%; height: auto; object-fit: contain; display: block; border-radius: 4px;" alt="QRIS Barcode">
-                <span style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 8px; font-weight: 500;">
-                  <span class="material-symbols-outlined" style="font-size: 14px;">zoom_in</span> Ketuk untuk memperbesar
-                </span>
+              <div id="qris-img-container" style="
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                border-radius: 12px;
+                padding: 6px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+                display: inline-block;
+                max-width: 220px;
+              " onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
+                <img src="${cmsSettings.paymentQris}" style="width: 100%; height: auto; display: block; border-radius: 8px; object-fit: contain;" alt="QRIS Barcode">
               </div>
+              <button id="btn-zoom-qris-text" style="
+                background: rgba(175, 140, 83, 0.1);
+                border: none;
+                color: var(--color-accent, #AF8C53);
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 12px;
+                border-radius: 20px;
+                transition: background 0.2s ease, transform 0.2s ease;
+              " onmouseover="this.style.background='rgba(175, 140, 83, 0.18)'; this.style.transform='scale(1.03)';" onmouseout="this.style.background='rgba(175, 140, 83, 0.1)'; this.style.transform='scale(1)';">
+                <span class="material-symbols-outlined" style="font-size: 16px;">zoom_in</span> Ketuk untuk Memperbesar
+              </button>
             ` : `
               <!-- Mock QR Code SVG -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges" style="display: block;">
-                <path fill="#ffffff" d="M0 0h29v29H0z"/>
-                <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
-              </svg>
+              <div style="background: white; padding: 16px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); display: inline-block;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges" style="display: block;">
+                  <path fill="#ffffff" d="M0 0h29v29H0z"/>
+                  <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
+                </svg>
+              </div>
             `}
           </div>
         `}
@@ -832,70 +857,73 @@ function showPaymentSimulationModal(order, paymentMethod) {
 
   // Lightbox click handler
   const qrisContainer = modalDiv.querySelector('#qris-img-container');
-  if (qrisContainer) {
-    qrisContainer.onclick = () => {
-      const lightbox = document.createElement('div');
-      lightbox.style = `
-        position: fixed;
-        top: 0; left: 0; width: 100vw; height: 100vh;
-        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-        z-index: 100000;
-        cursor: pointer;
-        padding: 32px 20px;
-        box-sizing: border-box;
-        font-family: var(--font-body, 'Outfit', sans-serif);
-      `;
-      lightbox.innerHTML = `
-        <!-- Header Branding -->
-        <div style="text-align: center; margin-top: 10px;">
-          <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin-bottom: 4px;">POWERED BY</div>
-          <div style="font-size: 18px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 1px;">
-            ${cmsSettings && cmsSettings.paymentAccName ? cmsSettings.paymentAccName.split(' ')[0] : 'RAKIT'}<span style="color: #fff;">PAY</span>
-          </div>
+  const btnZoomQris = modalDiv.querySelector('#btn-zoom-qris-text');
+  
+  const openLightbox = () => {
+    const lightbox = document.createElement('div');
+    lightbox.style = `
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+      z-index: 100000;
+      cursor: pointer;
+      padding: 32px 20px;
+      box-sizing: border-box;
+      font-family: var(--font-body, 'Outfit', sans-serif);
+    `;
+    lightbox.innerHTML = `
+      <!-- Header Branding -->
+      <div style="text-align: center; margin-top: 10px;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #64748b; margin-bottom: 4px;">POWERED BY</div>
+        <div style="font-size: 18px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 1px;">
+          ${cmsSettings && cmsSettings.paymentAccName ? cmsSettings.paymentAccName.split(' ')[0] : 'RAKIT'}<span style="color: #fff;">PAY</span>
         </div>
+      </div>
 
-        <!-- Central Card Container -->
-        <div style="
-          background: #ffffff;
-          border-radius: 16px;
-          padding: 20px;
-          width: 100%;
-          max-width: 330px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        ">
-          <!-- Main QRIS Card image -->
-          <img src="${cmsSettings.paymentQris}" style="width: 100%; max-height: 52vh; object-fit: contain; border-radius: 8px;" />
-          
-          <div style="margin-top: 12px; text-align: center;">
-            <p style="font-size: 11px; color: #94a3b8; font-family: monospace; margin: 0;">ID: ${order.id}</p>
-          </div>
+      <!-- Central Card Container -->
+      <div style="
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        width: 100%;
+        max-width: 330px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      ">
+        <!-- Main QRIS Card image -->
+        <img src="${cmsSettings.paymentQris}" style="width: 100%; max-height: 52vh; object-fit: contain; border-radius: 8px;" />
+        
+        <div style="margin-top: 12px; text-align: center;">
+          <p style="font-size: 11px; color: #94a3b8; font-family: monospace; margin: 0;">ID: ${order.id}</p>
         </div>
+      </div>
 
-        <!-- E-wallet Logos / Badges -->
-        <div style="text-align: center; width: 100%; max-width: 400px; margin-bottom: 10px;">
-          <p style="color: #475569; font-size: 10px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Dukung Pembayaran Instan via</p>
-          <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">GOPAY</span>
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">OVO</span>
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">DANA</span>
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">LINKAJA</span>
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">SHOPEEPAY</span>
-            <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">M-BANKING</span>
-          </div>
-          <p style="color: #64748b; font-size: 11px; margin-top: 20px; font-weight: 500;">Ketuk di mana saja untuk kembali</p>
+      <!-- E-wallet Logos / Badges -->
+      <div style="text-align: center; width: 100%; max-width: 400px; margin-bottom: 10px;">
+        <p style="color: #475569; font-size: 10px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Dukung Pembayaran Instan via</p>
+        <div style="display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;">
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">GOPAY</span>
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">OVO</span>
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">DANA</span>
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">LINKAJA</span>
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">SHOPEEPAY</span>
+          <span style="font-size: 9px; padding: 3px 6px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #94a3b8; font-weight: 700;">M-BANKING</span>
         </div>
-      `;
-      lightbox.onclick = () => {
-        document.body.removeChild(lightbox);
-      };
-      document.body.appendChild(lightbox);
+        <p style="color: #64748b; font-size: 11px; margin-top: 20px; font-weight: 500;">Ketuk di mana saja untuk kembali</p>
+      </div>
+    `;
+    lightbox.onclick = () => {
+      document.body.removeChild(lightbox);
     };
-  }
+    document.body.appendChild(lightbox);
+  };
+
+  if (qrisContainer) qrisContainer.onclick = openLightbox;
+  if (btnZoomQris) btnZoomQris.onclick = openLightbox;
 
   // Event handler for simulate successful payment
   document.getElementById('btn-simulate-pay').onclick = async () => {
