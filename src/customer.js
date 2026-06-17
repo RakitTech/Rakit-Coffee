@@ -798,9 +798,14 @@ function showPaymentSimulationModal(order, paymentMethod) {
           <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
             Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
           </p>
-          <div style="background: white; padding: 12px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          <div style="background: white; padding: 12px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); max-width: 100%;">
             ${cmsSettings && cmsSettings.paymentQris ? `
-              <img src="${cmsSettings.paymentQris}" style="width: 160px; height: 160px; object-fit: contain; display: block;" alt="QRIS Barcode">
+              <div id="qris-img-container" style="cursor: pointer; position: relative; display: flex; flex-direction: column; align-items: center;">
+                <img src="${cmsSettings.paymentQris}" style="max-width: 220px; max-height: 300px; width: 100%; height: auto; object-fit: contain; display: block; border-radius: 4px;" alt="QRIS Barcode">
+                <span style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 4px; margin-top: 8px; font-weight: 500;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">zoom_in</span> Ketuk untuk memperbesar
+                </span>
+              </div>
             ` : `
               <!-- Mock QR Code SVG -->
               <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges" style="display: block;">
@@ -824,6 +829,32 @@ function showPaymentSimulationModal(order, paymentMethod) {
   `;
 
   document.body.appendChild(modalDiv);
+
+  // Lightbox click handler
+  const qrisContainer = modalDiv.querySelector('#qris-img-container');
+  if (qrisContainer) {
+    qrisContainer.onclick = () => {
+      const lightbox = document.createElement('div');
+      lightbox.style = `
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.95);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 100000;
+        cursor: pointer;
+      `;
+      lightbox.innerHTML = `
+        <div style="text-align: center; max-width: 90%; max-height: 90%;">
+          <img src="${cmsSettings.paymentQris}" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);" />
+          <p style="color: #94a3b8; font-size: 14px; margin-top: 16px;">Ketuk di mana saja untuk kembali</p>
+        </div>
+      `;
+      lightbox.onclick = () => {
+        document.body.removeChild(lightbox);
+      };
+      document.body.appendChild(lightbox);
+    };
+  }
 
   // Event handler for simulate successful payment
   document.getElementById('btn-simulate-pay').onclick = async () => {
