@@ -177,6 +177,32 @@
               </div>
             </div>
 
+            <!-- Pengaturan Pembayaran -->
+            <div style="border: 1px solid var(--color-surface-variant); padding: 20px; border-radius: var(--radius-md);">
+              <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-accent);">payments</span> Informasi Pembayaran Kafe
+              </h3>
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-payment-name" style="font-weight: 600; font-size: 14px;">Nama Penerima / Nama Bank</label>
+                  <input type="text" id="cms-payment-name" placeholder="Contoh: Bank BCA - Rakit Coffee" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-payment-no" style="font-weight: 600; font-size: 14px;">Nomor Rekening / Nomor VA</label>
+                  <input type="text" id="cms-payment-no" placeholder="Contoh: 123-456-7890" class="filter-modern" required style="width: 100%; border: 1px solid var(--color-surface-variant); padding: 12px; border-radius: var(--radius-md);">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label for="cms-payment-qris" style="font-weight: 600; font-size: 14px;">Barcode QRIS (Upload Gambar Barcode)</label>
+                  <input type="file" id="cms-payment-qris" accept="image/*" style="width: 100%; padding: 8px 0;">
+                  <img id="cms-qris-preview" src="" style="display: none; width: 100%; max-width: 200px; max-height: 200px; object-fit: contain; border-radius: var(--radius-md); margin-top: 8px; border: 1px solid var(--color-surface-variant);">
+                </div>
+
+              </div>
+            </div>
+
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
               <button type="submit" class="btn btn-primary" style="background-color: var(--color-success); color: white; padding: 12px 24px; font-size: 16px;">
                 <span class="material-symbols-outlined" style="font-size: 20px; margin-right: 4px;">save</span> Simpan Tampilan

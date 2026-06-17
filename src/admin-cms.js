@@ -17,6 +17,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const subtitleFontInput = document.getElementById('cms-hero-subtitle-font');
   const previewImg = document.getElementById('cms-hero-preview');
 
+  // Payment elements
+  const paymentNameInput = document.getElementById('cms-payment-name');
+  const paymentNoInput = document.getElementById('cms-payment-no');
+  const paymentQrisInput = document.getElementById('cms-payment-qris');
+  const qrisPreviewImg = document.getElementById('cms-qris-preview');
+
   if (themeInput) themeInput.value = settings.themeColor;
   if (fontInput) fontInput.value = settings.fontFamily;
   if (titleInput) titleInput.value = settings.heroTitle;
@@ -26,9 +32,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (titleFontInput && settings.heroTitleFont) titleFontInput.value = settings.heroTitleFont;
   if (subtitleFontInput && settings.heroSubtitleFont) subtitleFontInput.value = settings.heroSubtitleFont;
   
+  if (paymentNameInput && settings.paymentAccName) paymentNameInput.value = settings.paymentAccName;
+  if (paymentNoInput && settings.paymentAccNo) paymentNoInput.value = settings.paymentAccNo;
+
   if (settings.heroImage && previewImg) {
     previewImg.src = settings.heroImage;
     previewImg.style.display = 'block';
+  }
+
+  if (settings.paymentQris && qrisPreviewImg) {
+    qrisPreviewImg.src = settings.paymentQris;
+    qrisPreviewImg.style.display = 'block';
+  }
+
+  // Handle QRIS image loading
+  if (paymentQrisInput) {
+    paymentQrisInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          if (qrisPreviewImg) {
+            qrisPreviewImg.src = evt.target.result;
+            qrisPreviewImg.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   }
 
   // Handle Image Upload and Cropper
@@ -106,7 +137,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         heroSubtitleColor: subtitleColorInput ? subtitleColorInput.value : '#ffffff',
         heroTitleFont: titleFontInput ? titleFontInput.value : '',
         heroSubtitleFont: subtitleFontInput ? subtitleFontInput.value : '',
-        heroImage: previewImg.style.display === 'block' ? previewImg.src : settings.heroImage
+        heroImage: previewImg.style.display === 'block' ? previewImg.src : settings.heroImage,
+        paymentAccName: paymentNameInput ? paymentNameInput.value.trim() : 'Rakit Coffee',
+        paymentAccNo: paymentNoInput ? paymentNoInput.value.trim() : '123-456-7890',
+        paymentQris: qrisPreviewImg && qrisPreviewImg.style.display === 'block' ? qrisPreviewImg.src : (settings.paymentQris || '')
       };
 
       await Store.saveCmsSettings(newSettings);

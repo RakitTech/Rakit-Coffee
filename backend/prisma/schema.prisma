@@ -89,6 +89,9 @@ model CmsSetting {
   heroSubtitleColor  String  @default("#ffffff") @map("hero_subtitle_color") @db.VarChar(7)
   heroTitleFont      String? @map("hero_title_font") @db.VarChar(100)
   heroSubtitleFont   String? @map("hero_subtitle_font") @db.VarChar(100)
+  paymentAccName     String  @default("Rakit Coffee") @map("payment_acc_name") @db.VarChar(100)
+  paymentAccNo       String  @default("123-456-7890") @map("payment_acc_no") @db.VarChar(100)
+  paymentQris        String? @map("payment_qris") @db.Text
 
   @@map("cms_settings")
 }

@@ -4,6 +4,7 @@ let cart = [];
 let myOrderIds = [];
 let currentModalMaxQty = Infinity;
 let renderCount = 0;
+let cmsSettings = null;
 
 function showLoading(msg = 'Memproses...') {
   let loader = document.getElementById('global-loader');
@@ -30,6 +31,7 @@ function hideLoading() {
 
 async function applyCmsSettings() {
   const settings = await Store.applyGlobalTheme();
+  cmsSettings = settings;
 
 
   // Apply Hero Elements
@@ -785,22 +787,27 @@ function showPaymentSimulationModal(order, paymentMethod) {
           </div>
         ` : isVa ? `
           <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
-            Salin nomor Virtual Account Mandiri / BCA berikut untuk membayar:
+            Silakan lakukan transfer Virtual Account ke rekening berikut:
           </p>
-          <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; font-size: 20px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 2px; margin-bottom: 12px;">
-            88012${order.id.replace(/\D/g, '').padEnd(8, '0')}
+          <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; font-size: 14px; text-align: left; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+            <div><span style="color: #94a3b8;">Bank / Penerima:</span> <strong style="color: #fff; float: right;">${cmsSettings && cmsSettings.paymentAccName ? cmsSettings.paymentAccName : 'BCA - Rakit Coffee'}</strong></div>
+            <div><span style="color: #94a3b8;">Nomor Rekening / VA:</span> <strong style="color: var(--color-accent, #AF8C53); float: right; font-family: monospace; font-size: 15px; letter-spacing: 1px;">${cmsSettings && cmsSettings.paymentAccNo ? cmsSettings.paymentAccNo : '88012' + order.id.replace(/\D/g, '').padEnd(8, '0')}</strong></div>
           </div>
-          <span style="font-size: 11px; color: #64748b;">(Simulasi bank transfer otomatis)</span>
+          <span style="font-size: 11px; color: #64748b;">(Simulasi transfer bank otomatis)</span>
         ` : `
           <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
             Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
           </p>
-          <!-- Mock QR Code SVG -->
-          <div style="background: white; padding: 16px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges">
-              <path fill="#ffffff" d="M0 0h29v29H0z"/>
-              <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
-            </svg>
+          <div style="background: white; padding: 12px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            ${cmsSettings && cmsSettings.paymentQris ? `
+              <img src="${cmsSettings.paymentQris}" style="width: 160px; height: 160px; object-fit: contain; display: block;" alt="QRIS Barcode">
+            ` : `
+              <!-- Mock QR Code SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges" style="display: block;">
+                <path fill="#ffffff" d="M0 0h29v29H0z"/>
+                <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
+              </svg>
+            `}
           </div>
         `}
       </div>

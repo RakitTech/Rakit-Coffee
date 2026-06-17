@@ -20,7 +20,10 @@ const initialCmsSettings = {
   heroTitleColor: '#ffeec5',
   heroSubtitleColor: '#ffffff',
   heroTitleFont: '',
-  heroSubtitleFont: ''
+  heroSubtitleFont: '',
+  paymentAccName: 'Rakit Coffee',
+  paymentAccNo: '123-456-7890',
+  paymentQris: ''
 };
 
 const API_BASE_URL = 'http://localhost:3001/api';

@@ -11,7 +11,10 @@ const DEFAULT_SETTINGS = {
   heroTitleColor: '#ffeec5',
   heroSubtitleColor: '#ffffff',
   heroTitleFont: '',
-  heroSubtitleFont: ''
+  heroSubtitleFont: '',
+  paymentAccName: 'Rakit Coffee',
+  paymentAccNo: '123-456-7890',
+  paymentQris: ''
 };
 
 // ============================================================
@@ -56,7 +59,10 @@ router.post('/', async (req, res) => {
         heroTitleColor: data.heroTitleColor,
         heroSubtitleColor: data.heroSubtitleColor,
         heroTitleFont: data.heroTitleFont || '',
-        heroSubtitleFont: data.heroSubtitleFont || ''
+        heroSubtitleFont: data.heroSubtitleFont || '',
+        paymentAccName: data.paymentAccName || 'Rakit Coffee',
+        paymentAccNo: data.paymentAccNo || '123-456-7890',
+        paymentQris: data.paymentQris || ''
       },
       create: {
         id: 1,
@@ -68,7 +74,10 @@ router.post('/', async (req, res) => {
         heroTitleColor: data.heroTitleColor,
         heroSubtitleColor: data.heroSubtitleColor,
         heroTitleFont: data.heroTitleFont || '',
-        heroSubtitleFont: data.heroSubtitleFont || ''
+        heroSubtitleFont: data.heroSubtitleFont || '',
+        paymentAccName: data.paymentAccName || 'Rakit Coffee',
+        paymentAccNo: data.paymentAccNo || '123-456-7890',
+        paymentQris: data.paymentQris || ''
       }
     });
 
