@@ -347,8 +347,20 @@ async function renderDashboard() {
   // Calculate metrics
   const totalOrders = globalFilteredOrders.length;
   // Pendapatan menghitung status pembayaran "Lunas"
-  const totalRevenue = globalFilteredOrders
-    .filter(o => o.paymentStatus === 'Lunas')
+  const lunasOrders = globalFilteredOrders.filter(o => o.paymentStatus === 'Lunas');
+  const totalRevenue = lunasOrders.reduce((sum, order) => sum + order.total, 0);
+
+  // Hitung detail per metode pembayaran (case-insensitive)
+  const qrisRevenue = lunasOrders
+    .filter(o => !o.paymentMethod || o.paymentMethod.toUpperCase() === 'QRIS')
+    .reduce((sum, order) => sum + order.total, 0);
+
+  const vaRevenue = lunasOrders
+    .filter(o => o.paymentMethod && o.paymentMethod.toUpperCase() === 'VA')
+    .reduce((sum, order) => sum + order.total, 0);
+
+  const manualRevenue = lunasOrders
+    .filter(o => o.paymentMethod && o.paymentMethod.toUpperCase() === 'MANUAL')
     .reduce((sum, order) => sum + order.total, 0);
   
   const metricOrders = document.getElementById('metric-orders');
@@ -356,6 +368,15 @@ async function renderDashboard() {
   
   const metricRevenue = document.getElementById('metric-revenue');
   if (metricRevenue) metricRevenue.textContent = `Rp ${totalRevenue.toLocaleString('id-ID')}`;
+
+  const elQris = document.getElementById('revenue-qris');
+  if (elQris) elQris.textContent = `Rp ${qrisRevenue.toLocaleString('id-ID')}`;
+
+  const elVa = document.getElementById('revenue-va');
+  if (elVa) elVa.textContent = `Rp ${vaRevenue.toLocaleString('id-ID')}`;
+
+  const elManual = document.getElementById('revenue-manual');
+  if (elManual) elManual.textContent = `Rp ${manualRevenue.toLocaleString('id-ID')}`;
 
   const modeSelect = document.getElementById('global-filter-mode');
   if (modeSelect) {
@@ -759,7 +780,7 @@ async function renderSalesTable(baseOrders) {
       <td style="font-weight: 600;">${order.customerName}</td>
       <td>Meja ${order.table}</td>
       <td style="font-weight: 600;">Rp ${order.total.toLocaleString('id-ID')}</td>
-      <td style="${paymentStatusStyle}">${order.paymentStatus || 'Belum Bayar'}</td>
+      <td style="${paymentStatusStyle}">${order.paymentStatus || 'Belum Bayar'}${order.paymentMethod ? ` (${order.paymentMethod})` : ''}</td>
       <td style="${statusStyle}">${order.status}</td>
       <td>
         <button class="btn btn-outline" style="padding: 4px 12px; font-size: 12px;" onclick="viewOrderDetails('${order.id}', event)">Detail</button>

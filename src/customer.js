@@ -653,12 +653,15 @@ function renderCartPage() {
         <p class="menu-desc" style="margin-bottom: 2px;">${item.note ? `Catatan: ${item.note}` : ''}</p>
         <p class="cart-item-price">Rp ${itemFinalPrice.toLocaleString('id-ID')}</p>
       </div>
-      <div class="cart-item-actions">
+      <div class="cart-item-actions" style="display: flex; gap: 8px;">
+        <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-variant); color: var(--color-accent);" onclick="duplicateCartItem(${index})" title="Duplikat dan Sesuaikan">
+          <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
+        </button>
         <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-variant); color: var(--color-primary);" onclick="openEditModal(${index})">
-          <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+          <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
         </button>
         <button class="btn-icon" style="width: 28px; height: 28px; background: var(--color-surface-variant); color: var(--color-error);" onclick="removeFromCart(${index})">
-          <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+          <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
         </button>
       </div>
     `;
@@ -670,6 +673,24 @@ function renderCartPage() {
 
 window.removeFromCart = function(index) {
   cart.splice(index, 1);
+  updateCartUI();
+  renderCartPage();
+  renderMenu();
+};
+
+window.duplicateCartItem = function(index) {
+  const item = cart[index];
+  if (!item) return;
+  
+  // Clone item but generate a new cartId and set qty to 1
+  const cloned = {
+    ...item,
+    cartId: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+    qty: 1
+  };
+  
+  // Insert next to original item
+  cart.splice(index + 1, 0, cloned);
   updateCartUI();
   renderCartPage();
   renderMenu();
@@ -728,6 +749,9 @@ function showPaymentSimulationModal(order, paymentMethod) {
 
   const formattedTotal = `Rp ${order.total.toLocaleString('id-ID')}`;
   
+  const isManual = paymentMethod.toLowerCase() === 'manual';
+  const isVa = paymentMethod.toLowerCase() === 'va';
+
   modalDiv.innerHTML = `
     <div style="
       background: #1e293b;
@@ -752,21 +776,38 @@ function showPaymentSimulationModal(order, paymentMethod) {
       </div>
 
       <div style="margin-bottom: 24px;">
-        <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
-          Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
-        </p>
-        <!-- Mock QR Code SVG -->
-        <div style="background: white; padding: 16px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-          <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges">
-            <path fill="#ffffff" d="M0 0h29v29H0z"/>
-            <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
-          </svg>
-        </div>
+        ${isManual ? `
+          <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+            Silakan tunjukkan nomor pesanan Anda ke Kasir untuk pembayaran Tunai / Debit / QRIS Kasir:
+          </p>
+          <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; font-size: 20px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 1px; border: 1px dashed var(--color-accent, #AF8C53);">
+            ${order.id}
+          </div>
+        ` : isVa ? `
+          <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+            Salin nomor Virtual Account Mandiri / BCA berikut untuk membayar:
+          </p>
+          <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 8px; font-size: 20px; font-weight: 800; color: var(--color-accent, #AF8C53); letter-spacing: 2px; margin-bottom: 12px;">
+            88012${order.id.replace(/\D/g, '').padEnd(8, '0')}
+          </div>
+          <span style="font-size: 11px; color: #64748b;">(Simulasi bank transfer otomatis)</span>
+        ` : `
+          <p style="font-size: 14px; color: #94a3b8; margin-bottom: 16px; line-height: 1.5;">
+            Pindai kode QR di bawah ini menggunakan aplikasi e-wallet Anda:
+          </p>
+          <!-- Mock QR Code SVG -->
+          <div style="background: white; padding: 16px; display: inline-block; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 29 29" shape-rendering="crispEdges">
+              <path fill="#ffffff" d="M0 0h29v29H0z"/>
+              <path fill="#0f172a" d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0zm10 0h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm8-18h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm-8 4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zm12-4h2v2h-2zm2 2h2v2h-2zm-2 2h2v3h-2zM9 1h5v1H9zm1 2h3v1h-3zm-1 2h5v1H9zm11-4h5v1h-5zm1 2h3v1h-3zm-1 2h5v1h-5zM2 9h3v1H2zm0 2h3v1H2zm0 2h3v1H2zm21-4h3v1h-3zm0 2h3v1h-3zm0 2h3v1h-3z"/>
+            </svg>
+          </div>
+        `}
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <button id="btn-simulate-pay" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 600;">
-          Simulasi Bayar Sukses
+          ${isManual ? 'Kasir Konfirmasi Lunas' : 'Simulasi Bayar Sukses'}
         </button>
         <button id="btn-cancel-pay" class="btn btn-outline" style="width: 100%; padding: 12px; color: #cbd5e1; border-color: #475569; background: transparent;">
           Batalkan Pembayaran
@@ -881,7 +922,7 @@ async function updateTrackerStatus() {
         ${itemsHtml}
       </div>
 
-      <div class="stepper">
+      <div class="stepper" style="margin-bottom: ${order.status === 'Siap' ? '24px' : '0'};">
         <div class="step ${currentStep >= 1 ? (currentStep === 1 ? 'active' : 'completed') : ''}">
           <div class="step-icon"><span class="material-symbols-outlined">receipt_long</span></div>
           <div class="step-content">
@@ -904,7 +945,179 @@ async function updateTrackerStatus() {
           </div>
         </div>
       </div>
+
+      ${order.status === 'Siap' ? `
+      <div style="margin-top: 24px; border-top: 1px dashed var(--color-surface-variant); padding-top: 20px;">
+        <button class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600;" onclick="viewCustomerInvoice('${order.id}')">
+          <span class="material-symbols-outlined" style="font-size: 20px;">receipt_long</span>
+          Lihat & Unduh Invoice
+        </button>
+      </div>
+      ` : ''}
     `;
     activeState.appendChild(card);
   });
 }
+
+window.viewCustomerInvoice = async function(orderId) {
+  const allOrders = await Store.getOrders();
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) {
+    alert('Pesanan tidak ditemukan.');
+    return;
+  }
+
+  const orderDate = new Date(order.timestamp);
+  const formattedDate = orderDate.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+  const formattedTime = orderDate.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const invoiceModal = document.createElement('div');
+  invoiceModal.id = 'invoice-modal-overlay';
+  invoiceModal.style = `
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    z-index: 99999; backdrop-filter: blur(8px);
+    font-family: 'Outfit', 'Inter', sans-serif;
+    padding: 16px;
+    box-sizing: border-box;
+  `;
+
+  const itemsListHtml = order.items.map(item => {
+    let modsHtml = '';
+    if (item.selectedModifiers && item.selectedModifiers.length > 0) {
+      const allMods = item.selectedModifiers.flatMap(g => g.selected.map(s => s.name)).join(', ');
+      modsHtml = `<div style="font-size: 11px; color: #64748b; margin-top: 2px;">(${allMods})</div>`;
+    }
+    const itemFinalPrice = item.price + (item.modifierTotal || 0);
+    return `
+      <div style="display: flex; justify-content: space-between; font-size: 13px; color: #1e293b; margin-bottom: 8px;">
+        <div style="flex: 1; padding-right: 12px;">
+          <div><strong>${item.qty}x</strong> ${item.name}</div>
+          ${modsHtml}
+          ${item.note ? `<div style="font-size: 11px; color: #64748b; font-style: italic;">Catatan: ${item.note}</div>` : ''}
+        </div>
+        <div style="font-weight: 600; color: #1e293b;">Rp ${(itemFinalPrice * item.qty).toLocaleString('id-ID')}</div>
+      </div>
+    `;
+  }).join('');
+
+  invoiceModal.innerHTML = `
+    <div style="background: transparent; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 90vh;" class="hide-scrollbar">
+      <!-- RENDER TARGET FOR HTML2CANVAS -->
+      <div id="invoice-capture-target" style="background: #ffffff; padding: 32px 24px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); color: #1e293b; box-sizing: border-box; border: 1px solid #e2e8f0; position: relative;">
+        <!-- Watermark / Background Accent -->
+        <div style="position: absolute; top: 12px; right: 24px; font-size: 10px; font-weight: 700; color: #10b981; border: 1.5px solid #10b981; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; transform: rotate(5deg); font-family: sans-serif;">
+          ${order.paymentStatus === 'Lunas' ? 'Lunas' : 'Belum Bayar'}
+        </div>
+
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h2 style="font-family: 'Playfair Display', serif; font-size: 24px; color: #1e293b; margin-bottom: 4px;">Rakit Coffee</h2>
+          <p style="font-size: 11px; color: #64748b; letter-spacing: 0.5px;">Rakit Rasa, Bangun Cerita</p>
+          <div style="margin: 16px 0; border-top: 1px dashed #cbd5e1;"></div>
+        </div>
+
+        <!-- Info Grid -->
+        <div style="font-size: 12px; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 20px;">
+          <div>
+            <span style="color: #94a3b8; display: block; font-size: 10px; text-transform: uppercase;">ID Pesanan</span>
+            <strong style="color: #1e293b; font-family: monospace; font-size: 13px;">${order.id}</strong>
+          </div>
+          <div style="text-align: right;">
+            <span style="color: #94a3b8; display: block; font-size: 10px; text-transform: uppercase;">Nomor Meja</span>
+            <strong style="color: #1e293b; font-size: 14px;">Meja ${order.table}</strong>
+          </div>
+          <div>
+            <span style="color: #94a3b8; display: block; font-size: 10px; text-transform: uppercase;">Nama Pelanggan</span>
+            <strong style="color: #1e293b;">${order.customerName}</strong>
+          </div>
+          <div style="text-align: right;">
+            <span style="color: #94a3b8; display: block; font-size: 10px; text-transform: uppercase;">Tanggal & Waktu</span>
+            <strong style="color: #1e293b;">${formattedDate}, ${formattedTime}</strong>
+          </div>
+        </div>
+
+        <div style="border-top: 1px dashed #cbd5e1; margin-bottom: 16px;"></div>
+
+        <!-- Items -->
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 11px; text-transform: uppercase; color: #94a3b8; margin-bottom: 12px; letter-spacing: 0.5px;">Rincian Pesanan</h4>
+          ${itemsListHtml}
+        </div>
+
+        <div style="border-top: 1px dashed #cbd5e1; margin: 16px 0;"></div>
+
+        <!-- Total -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 13px; color: #475569; font-weight: 500;">Metode Pembayaran</span>
+          <strong style="font-size: 13px; color: #1e293b;">${order.paymentMethod || 'QRIS'}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <span style="font-size: 15px; color: #1e293b; font-weight: 700;">TOTAL BAYAR</span>
+          <strong style="font-size: 18px; color: var(--color-accent, #AF8C53); font-weight: 800;">Rp ${order.total.toLocaleString('id-ID')}</strong>
+        </div>
+
+        <!-- Footer Note -->
+        <div style="text-align: center; margin-top: 24px; border-top: 1px dashed #cbd5e1; padding-top: 16px;">
+          <p style="font-size: 11px; color: #64748b; margin-bottom: 2px;">Terima kasih atas kunjungan Anda!</p>
+          <p style="font-size: 10px; color: #94a3b8;">Silakan berkunjung kembali.</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px;">
+        <button id="btn-download-invoice" class="btn btn-primary" style="flex: 1; padding: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          <span class="material-symbols-outlined">download</span>
+          Unduh PNG
+        </button>
+        <button id="btn-close-invoice" class="btn btn-outline" style="flex: 1; padding: 12px; color: #cbd5e1; border-color: #475569; background: #1e293b;">
+          Tutup
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(invoiceModal);
+
+  // Close Action
+  document.getElementById('btn-close-invoice').onclick = () => {
+    invoiceModal.remove();
+  };
+
+  // Download Action using html2canvas
+  document.getElementById('btn-download-invoice').onclick = () => {
+    const target = document.getElementById('invoice-capture-target');
+    const downloadBtn = document.getElementById('btn-download-invoice');
+    
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Memproses...';
+
+    html2canvas(target, {
+      scale: 3, // High quality render
+      backgroundColor: '#ffffff',
+      useCORS: true
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `Invoice_${order.id}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      downloadBtn.disabled = false;
+      downloadBtn.innerHTML = `<span class="material-symbols-outlined">download</span> Unduh PNG`;
+    }).catch(err => {
+      console.error(err);
+      alert('Gagal mengunduh gambar invoice.');
+      downloadBtn.disabled = false;
+      downloadBtn.innerHTML = `<span class="material-symbols-outlined">download</span> Unduh PNG`;
+    });
+  };
+};

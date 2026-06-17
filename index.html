@@ -31,6 +31,7 @@
       } catch(e) {}
     })();
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -105,6 +106,14 @@
                   <span class="payment-label">Virtual Account</span>
                 </div>
                 <input type="radio" name="payment-method" value="va" style="width: 20px; height: 20px;">
+              </label>
+
+              <label class="radio-item payment-option" style="padding: 12px 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <svg class="payment-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                  <span class="payment-label">Manual (Kasir)</span>
+                </div>
+                <input type="radio" name="payment-method" value="manual" style="width: 20px; height: 20px;">
               </label>
             </div>
           </div>

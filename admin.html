@@ -128,9 +128,23 @@
           </div>
 
           <!-- Row 2: Revenue -->
-          <div class="metric-card">
-            <h3 id="metric-revenue-title">Pendapatan (Harian)</h3>
-            <div class="metric-value" id="metric-revenue">Rp 0</div>
+          <div class="metric-card" style="display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; text-align: left;">
+            <h3 id="metric-revenue-title" style="align-self: center; text-align: center;">Pendapatan (Harian)</h3>
+            <div class="metric-value" id="metric-revenue" style="margin-bottom: var(--space-md); align-self: center; text-align: center;">Rp 0</div>
+            <div style="border-top: 1px solid var(--color-surface-variant); padding-top: var(--space-sm); font-size: 13px; color: var(--color-text-body); display: flex; flex-direction: column; gap: 8px; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="display: flex; align-items: center; gap: 6px; color: var(--color-text-body);"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-success);">qr_code_2</span> QRIS</span>
+                <strong id="revenue-qris">Rp 0</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="display: flex; align-items: center; gap: 6px; color: var(--color-text-body);"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-info);">account_balance</span> Virtual Account</span>
+                <strong id="revenue-va">Rp 0</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="display: flex; align-items: center; gap: 6px; color: var(--color-text-body);"><span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-accent);">payments</span> Manual (Kasir)</span>
+                <strong id="revenue-manual">Rp 0</strong>
+              </div>
+            </div>
           </div>
           <div class="section-block" id="sales-chart-container">
             <h3 style="margin-top: 0; margin-bottom: 16px;">Grafik Tren Penjualan</h3>
